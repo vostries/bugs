@@ -68,6 +68,12 @@ class MainActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
+        val defaultCalendar = Calendar.getInstance()
+        defaultCalendar.set(2000, 0, 1)
+        calendarView.date = defaultCalendar.timeInMillis
+        selectedDay = 1
+        selectedMonth = 1
+
         calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
             selectedDay = dayOfMonth
             selectedMonth = month + 1
