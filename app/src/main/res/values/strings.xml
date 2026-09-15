@@ -4,4 +4,11 @@
     <string name="gender_label">Пол:</string>
     <string name="male">Мужской</string>
     <string name="female">Женский</string>
+    <string name="course_label">Курс:</string>
+    <string-array name="courses">
+        <item>1 курс</item>
+        <item>2 курс</item>
+        <item>3 курс</item>
+        <item>4 курс</item>
+    </string-array>
 </resources>
