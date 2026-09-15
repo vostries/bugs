@@ -108,6 +108,29 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp" />
 
+        <Button
+            android:id="@+id/buttonShow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/show_button"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/textViewResult"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/imageViewZodiac"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:contentDescription="@string/zodiac_sign"
+            android:visibility="gone" />
+
     </LinearLayout>
 
 </ScrollView>
