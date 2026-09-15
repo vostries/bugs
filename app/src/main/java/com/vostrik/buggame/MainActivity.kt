@@ -1,5 +1,9 @@
 package com.vostrik.buggame
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.Button
@@ -12,6 +16,7 @@ import android.widget.SeekBar
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -88,7 +93,35 @@ class MainActivity : AppCompatActivity() {
             """.trimIndent()
 
             textViewResult.text = result
+            textViewResult.visibility = TextView.VISIBLE
+
+            val zodiacEmoji = ZodiacHelper.getZodiacEmoji(player.zodiacSign)
+            val bitmap = createZodiacBitmap(zodiacEmoji)
+            imageViewZodiac.setImageBitmap(bitmap)
             imageViewZodiac.visibility = ImageView.VISIBLE
         }
+    }
+
+    private fun createZodiacBitmap(emoji: String): Bitmap {
+        val size = 300
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+
+        val circlePaint = Paint().apply {
+            color = Color.parseColor("#6200EE")
+            isAntiAlias = true
+        }
+        canvas.drawCircle(size / 2f, size / 2f, size / 2f, circlePaint)
+
+        val textPaint = Paint().apply {
+            color = Color.WHITE
+            textSize = 150f
+            textAlign = Paint.Align.CENTER
+            isAntiAlias = true
+        }
+        val yPos = size / 2f - (textPaint.descent() + textPaint.ascent()) / 2
+        canvas.drawText(emoji, size / 2f, yPos, textPaint)
+
+        return bitmap
     }
 }

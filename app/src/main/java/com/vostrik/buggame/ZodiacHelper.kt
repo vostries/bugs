@@ -19,4 +19,8 @@ object ZodiacHelper {
             else -> ""
         }
     }
+
+    fun getZodiacEmoji(sign: String): String {
+        return sign.substring(0, 1)
+    }
 }
