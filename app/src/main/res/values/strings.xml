@@ -11,4 +11,5 @@
         <item>3 курс</item>
         <item>4 курс</item>
     </string-array>
+    <string name="birth_date_label">Дата рождения:</string>
 </resources>

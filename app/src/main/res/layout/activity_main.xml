@@ -62,6 +62,19 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/birth_date_label"
+            android:textSize="16sp"
+            android:layout_marginBottom="8dp" />
+
+        <CalendarView
+            android:id="@+id/calendarView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp" />
+
     </LinearLayout>
 
 </ScrollView>
