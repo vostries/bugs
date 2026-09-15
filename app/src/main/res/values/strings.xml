@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">BugGame</string>
+    <string name="full_name_hint">ФИО</string>
+    <string name="gender_label">Пол:</string>
+    <string name="male">Мужской</string>
+    <string name="female">Женский</string>
 </resources>
