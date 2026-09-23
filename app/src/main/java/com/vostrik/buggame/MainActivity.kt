@@ -67,7 +67,10 @@ class MainActivity : AppCompatActivity() {
         )
         findViewById<ListView>(R.id.listViewAuthors).adapter = AuthorsAdapter(
             this,
-            listOf("Nenorii", "vostries")
+            listOf(
+                "Nenorii" to R.drawable.nenorii,
+                "vostries" to R.drawable.vostries
+            )
         )
         tabLayout.addTab(tabLayout.newTab().setText(R.string.registration_tab))
         tabLayout.addTab(tabLayout.newTab().setText(R.string.rules_tab))
@@ -114,7 +117,7 @@ class MainActivity : AppCompatActivity() {
 
         seekBarRoundDuration.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                textViewRoundDuration.text = (progress + 1).toString()
+                textViewRoundDuration.text = (progress + 30).toString()
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit

@@ -121,8 +121,8 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:max="9"
-                android:progress="4" />
+                android:max="270"
+                android:progress="0" />
 
             <TextView
                 android:id="@+id/textViewRoundDuration"
@@ -131,7 +131,7 @@
                 android:layout_marginStart="16dp"
                 android:minWidth="24dp"
                 android:gravity="center"
-                android:text="5"
+                android:text="30"
                 android:textSize="16sp" />
 
         </LinearLayout>

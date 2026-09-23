@@ -10,15 +10,15 @@ import android.widget.TextView
 
 class AuthorsAdapter(
     context: Context,
-    authors: List<String>
-) : ArrayAdapter<String>(context, R.layout.item_author, authors) {
+    private val authors: List<Pair<String, Int>>
+) : ArrayAdapter<Pair<String, Int>>(context, R.layout.item_author, authors) {
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val view = convertView ?: LayoutInflater.from(context)
             .inflate(R.layout.item_author, parent, false)
-        view.findViewById<ImageView>(R.id.imageViewAuthor)
-            .setImageResource(R.mipmap.ic_launcher_round)
-        view.findViewById<TextView>(R.id.textViewAuthorName).text = getItem(position)
+        val author = getItem(position) ?: return view
+        view.findViewById<ImageView>(R.id.imageViewAuthor).setImageResource(author.second)
+        view.findViewById<TextView>(R.id.textViewAuthorName).text = author.first
         return view
     }
 }
