@@ -7,6 +7,8 @@
     <string name="settings_tab">Настройки игры</string>
     <string name="game_speed_label">Скорость игры:</string>
     <string name="max_cockroaches_label">Максимальное количество тараканов:</string>
+    <string name="bonus_interval_label">Интервал появления бонусов (секунды):</string>
+    <string name="round_duration_label">Длительность раунда (минуты):</string>
     <string name="full_name_hint">ФИО</string>
     <string name="gender_label">Пол:</string>
     <string name="male">Мужской</string>

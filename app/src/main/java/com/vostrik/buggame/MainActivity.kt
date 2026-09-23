@@ -54,6 +54,10 @@ class MainActivity : AppCompatActivity() {
         val textViewGameSpeed = findViewById<TextView>(R.id.textViewGameSpeed)
         val seekBarMaxCockroaches = findViewById<SeekBar>(R.id.seekBarMaxCockroaches)
         val textViewMaxCockroaches = findViewById<TextView>(R.id.textViewMaxCockroaches)
+        val seekBarBonusInterval = findViewById<SeekBar>(R.id.seekBarBonusInterval)
+        val textViewBonusInterval = findViewById<TextView>(R.id.textViewBonusInterval)
+        val seekBarRoundDuration = findViewById<SeekBar>(R.id.seekBarRoundDuration)
+        val textViewRoundDuration = findViewById<TextView>(R.id.textViewRoundDuration)
         findViewById<WebView>(R.id.webViewRules).loadDataWithBaseURL(
             null,
             resources.openRawResource(R.raw.game_rules).bufferedReader().use { it.readText() },
@@ -93,6 +97,24 @@ class MainActivity : AppCompatActivity() {
         seekBarMaxCockroaches.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 textViewMaxCockroaches.text = (progress + 1).toString()
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+            override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+        })
+
+        seekBarBonusInterval.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                textViewBonusInterval.text = (progress + 1).toString()
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+            override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+        })
+
+        seekBarRoundDuration.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                textViewRoundDuration.text = (progress + 1).toString()
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
