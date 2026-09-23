@@ -15,7 +15,13 @@
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <include layout="@layout/tab_registration" />
+        <include
+            android:id="@+id/tabRegistration"
+            layout="@layout/tab_registration" />
+        <include
+            android:id="@+id/tabRules"
+            layout="@layout/tab_rules"
+            android:visibility="gone" />
 
     </FrameLayout>
 

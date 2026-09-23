@@ -15,6 +15,8 @@ import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.Spinner
 import android.widget.TextView
+import android.webkit.WebView
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import com.google.android.material.tabs.TabLayout
@@ -43,7 +45,26 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
+        val tabRegistration = findViewById<View>(R.id.tabRegistration)
+        val tabRules = findViewById<View>(R.id.tabRules)
+        findViewById<WebView>(R.id.webViewRules).loadDataWithBaseURL(
+            null,
+            resources.openRawResource(R.raw.game_rules).bufferedReader().use { it.readText() },
+            "text/html",
+            "UTF-8",
+            null
+        )
         tabLayout.addTab(tabLayout.newTab().setText(R.string.registration_tab))
+        tabLayout.addTab(tabLayout.newTab().setText(R.string.rules_tab))
+        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab) {
+                tabRegistration.visibility = if (tab.position == 0) View.VISIBLE else View.GONE
+                tabRules.visibility = if (tab.position == 1) View.VISIBLE else View.GONE
+            }
+
+            override fun onTabUnselected(tab: TabLayout.Tab) = Unit
+            override fun onTabReselected(tab: TabLayout.Tab) = Unit
+        })
 
         player = Player()
 
