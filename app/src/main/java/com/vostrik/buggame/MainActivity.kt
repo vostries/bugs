@@ -10,6 +10,7 @@ import android.widget.Button
 import android.widget.CalendarView
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.ListView
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.SeekBar
@@ -47,6 +48,7 @@ class MainActivity : AppCompatActivity() {
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
         val tabRegistration = findViewById<View>(R.id.tabRegistration)
         val tabRules = findViewById<View>(R.id.tabRules)
+        val tabAuthors = findViewById<View>(R.id.tabAuthors)
         findViewById<WebView>(R.id.webViewRules).loadDataWithBaseURL(
             null,
             resources.openRawResource(R.raw.game_rules).bufferedReader().use { it.readText() },
@@ -54,12 +56,18 @@ class MainActivity : AppCompatActivity() {
             "UTF-8",
             null
         )
+        findViewById<ListView>(R.id.listViewAuthors).adapter = AuthorsAdapter(
+            this,
+            listOf("Nenorii", "vostries")
+        )
         tabLayout.addTab(tabLayout.newTab().setText(R.string.registration_tab))
         tabLayout.addTab(tabLayout.newTab().setText(R.string.rules_tab))
+        tabLayout.addTab(tabLayout.newTab().setText(R.string.authors_tab))
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 tabRegistration.visibility = if (tab.position == 0) View.VISIBLE else View.GONE
                 tabRules.visibility = if (tab.position == 1) View.VISIBLE else View.GONE
+                tabAuthors.visibility = if (tab.position == 2) View.VISIBLE else View.GONE
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab) = Unit
