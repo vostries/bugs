@@ -49,6 +49,11 @@ class MainActivity : AppCompatActivity() {
         val tabRegistration = findViewById<View>(R.id.tabRegistration)
         val tabRules = findViewById<View>(R.id.tabRules)
         val tabAuthors = findViewById<View>(R.id.tabAuthors)
+        val tabSettings = findViewById<View>(R.id.tabSettings)
+        val seekBarGameSpeed = findViewById<SeekBar>(R.id.seekBarGameSpeed)
+        val textViewGameSpeed = findViewById<TextView>(R.id.textViewGameSpeed)
+        val seekBarMaxCockroaches = findViewById<SeekBar>(R.id.seekBarMaxCockroaches)
+        val textViewMaxCockroaches = findViewById<TextView>(R.id.textViewMaxCockroaches)
         findViewById<WebView>(R.id.webViewRules).loadDataWithBaseURL(
             null,
             resources.openRawResource(R.raw.game_rules).bufferedReader().use { it.readText() },
@@ -63,15 +68,35 @@ class MainActivity : AppCompatActivity() {
         tabLayout.addTab(tabLayout.newTab().setText(R.string.registration_tab))
         tabLayout.addTab(tabLayout.newTab().setText(R.string.rules_tab))
         tabLayout.addTab(tabLayout.newTab().setText(R.string.authors_tab))
+        tabLayout.addTab(tabLayout.newTab().setText(R.string.settings_tab))
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 tabRegistration.visibility = if (tab.position == 0) View.VISIBLE else View.GONE
                 tabRules.visibility = if (tab.position == 1) View.VISIBLE else View.GONE
                 tabAuthors.visibility = if (tab.position == 2) View.VISIBLE else View.GONE
+                tabSettings.visibility = if (tab.position == 3) View.VISIBLE else View.GONE
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab) = Unit
             override fun onTabReselected(tab: TabLayout.Tab) = Unit
+        })
+
+        seekBarGameSpeed.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                textViewGameSpeed.text = (progress + 1).toString()
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+            override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+        })
+
+        seekBarMaxCockroaches.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                textViewMaxCockroaches.text = (progress + 1).toString()
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+            override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
         })
 
         player = Player()

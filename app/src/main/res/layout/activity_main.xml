@@ -41,6 +41,15 @@
             <include layout="@layout/tab_authors" />
 
         </FrameLayout>
+        <FrameLayout
+            android:id="@+id/tabSettings"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <include layout="@layout/tab_settings" />
+
+        </FrameLayout>
 
     </FrameLayout>
 
