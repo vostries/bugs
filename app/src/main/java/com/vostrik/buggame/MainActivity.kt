@@ -207,6 +207,10 @@ class MainActivity : AppCompatActivity() {
             imageViewZodiac.setImageBitmap(bitmap)
             imageViewZodiac.visibility = ImageView.VISIBLE
         }
+
+        if (intent.getBooleanExtra("START_GAME_TAB", false)) {
+            tabLayout.getTabAt(4)?.select()
+        }
     }
 
     private fun createZodiacBitmap(emoji: String): Bitmap {
@@ -239,6 +243,10 @@ class MainActivity : AppCompatActivity() {
         val seekBarGameSpeed = findViewById<SeekBar>(R.id.seekBarGameSpeed)
         val seekBarMaxCockroaches = findViewById<SeekBar>(R.id.seekBarMaxCockroaches)
         val seekBarRoundDuration = findViewById<SeekBar>(R.id.seekBarRoundDuration)
+
+        textViewScore.text = "Очки: 0"
+        textViewTimer.text = ""
+        gameView.setBugs(emptyList())
 
         val gameSpeed = (seekBarGameSpeed.progress + 1).toFloat()
         val maxBugs = seekBarMaxCockroaches.progress + 1

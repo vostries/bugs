@@ -30,6 +30,7 @@ class ResultActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.buttonPlayAgain).setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
+            intent.putExtra("START_GAME_TAB", true)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(intent)
             finish()
