@@ -1,5 +1,6 @@
 package com.vostrik.buggame
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -19,7 +20,6 @@ import android.widget.TextView
 import android.webkit.WebView
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import com.google.android.material.tabs.TabLayout
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -263,8 +263,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showGameResult(result: GameResult) {
-        // пока заглушка, друг сделает ResultActivity
-        val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
-        tabLayout.getTabAt(0)?.select()
+        val intent = Intent(this, ResultActivity::class.java)
+        intent.putExtra("SCORE", result.score)
+        intent.putExtra("HITS", result.hits)
+        intent.putExtra("MISSES", result.misses)
+        startActivity(intent)
     }
 }
