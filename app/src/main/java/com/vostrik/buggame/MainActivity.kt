@@ -51,6 +51,7 @@ class MainActivity : AppCompatActivity() {
         val tabRules = findViewById<View>(R.id.tabRules)
         val tabAuthors = findViewById<View>(R.id.tabAuthors)
         val tabSettings = findViewById<View>(R.id.tabSettings)
+        val tabGame = findViewById<View>(R.id.tabGame)
         val seekBarGameSpeed = findViewById<SeekBar>(R.id.seekBarGameSpeed)
         val textViewGameSpeed = findViewById<TextView>(R.id.textViewGameSpeed)
         val seekBarMaxCockroaches = findViewById<SeekBar>(R.id.seekBarMaxCockroaches)
@@ -77,12 +78,14 @@ class MainActivity : AppCompatActivity() {
         tabLayout.addTab(tabLayout.newTab().setText(R.string.rules_tab))
         tabLayout.addTab(tabLayout.newTab().setText(R.string.authors_tab))
         tabLayout.addTab(tabLayout.newTab().setText(R.string.settings_tab))
+        tabLayout.addTab(tabLayout.newTab().setText(R.string.game_tab))
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 tabRegistration.visibility = if (tab.position == 0) View.VISIBLE else View.GONE
                 tabRules.visibility = if (tab.position == 1) View.VISIBLE else View.GONE
                 tabAuthors.visibility = if (tab.position == 2) View.VISIBLE else View.GONE
                 tabSettings.visibility = if (tab.position == 3) View.VISIBLE else View.GONE
+                tabGame.visibility = if (tab.position == 4) View.VISIBLE else View.GONE
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab) = Unit

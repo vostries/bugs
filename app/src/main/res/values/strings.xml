@@ -5,6 +5,7 @@
     <string name="authors_tab">Авторы</string>
     <string name="author_photo">Фото автора</string>
     <string name="settings_tab">Настройки</string>
+    <string name="game_tab">Игра</string>
     <string name="game_speed_label">Скорость игры:</string>
     <string name="max_cockroaches_label">Максимальное количество тараканов:</string>
     <string name="bonus_interval_label">Интервал появления бонусов (секунды):</string>
