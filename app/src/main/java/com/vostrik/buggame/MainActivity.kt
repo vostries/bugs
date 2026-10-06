@@ -37,6 +37,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var buttonShow: Button
     private lateinit var textViewResult: TextView
     private lateinit var imageViewZodiac: ImageView
+    private var gameManager: GameManager? = null
 
     private var selectedDay = 1
     private var selectedMonth = 0
@@ -86,6 +87,12 @@ class MainActivity : AppCompatActivity() {
                 tabAuthors.visibility = if (tab.position == 2) View.VISIBLE else View.GONE
                 tabSettings.visibility = if (tab.position == 3) View.VISIBLE else View.GONE
                 tabGame.visibility = if (tab.position == 4) View.VISIBLE else View.GONE
+
+                if (tab.position == 4) {
+                    startGame()
+                } else {
+                    gameManager?.stop()
+                }
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab) = Unit
@@ -220,5 +227,41 @@ class MainActivity : AppCompatActivity() {
         canvas.drawText(emoji, size / 2f, yPos, textPaint)
 
         return bitmap
+    }
+
+    private fun startGame() {
+        val gameView = findViewById<GameView>(R.id.gameView)
+        val textViewScore = findViewById<TextView>(R.id.textViewScore)
+        val textViewTimer = findViewById<TextView>(R.id.textViewTimer)
+        val seekBarGameSpeed = findViewById<SeekBar>(R.id.seekBarGameSpeed)
+        val seekBarMaxCockroaches = findViewById<SeekBar>(R.id.seekBarMaxCockroaches)
+        val seekBarRoundDuration = findViewById<SeekBar>(R.id.seekBarRoundDuration)
+
+        val gameSpeed = (seekBarGameSpeed.progress + 1).toFloat()
+        val maxBugs = seekBarMaxCockroaches.progress + 1
+        val roundDuration = seekBarRoundDuration.progress + 30
+
+        gameManager = GameManager(
+            gameView = gameView,
+            roundDuration = roundDuration,
+            maxBugs = maxBugs,
+            gameSpeed = gameSpeed,
+            onScoreUpdate = { score ->
+                textViewScore.text = "Очки: $score"
+            },
+            onTimeUpdate = { seconds ->
+                textViewTimer.text = seconds.toString()
+            },
+            onGameEnd = { result ->
+                showGameResult(result)
+            }
+        )
+        gameManager?.start()
+    }
+
+    private fun showGameResult(result: GameResult) {
+        // пока заглушка, друг сделает ResultActivity
+        val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
+        tabLayout.getTabAt(0)?.select()
     }
 }
