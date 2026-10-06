@@ -46,6 +46,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
+        val tabContent = findViewById<SwipeFrameLayout>(R.id.tabContent)
         val tabRegistration = findViewById<View>(R.id.tabRegistration)
         val tabRules = findViewById<View>(R.id.tabRules)
         val tabAuthors = findViewById<View>(R.id.tabAuthors)
@@ -87,6 +88,10 @@ class MainActivity : AppCompatActivity() {
             override fun onTabUnselected(tab: TabLayout.Tab) = Unit
             override fun onTabReselected(tab: TabLayout.Tab) = Unit
         })
+        tabContent.onSwipe = { direction ->
+            val nextPosition = (tabLayout.selectedTabPosition + direction).coerceIn(0, tabLayout.tabCount - 1)
+            tabLayout.getTabAt(nextPosition)?.select()
+        }
 
         seekBarGameSpeed.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
