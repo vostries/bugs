@@ -19,6 +19,13 @@ class GameView @JvmOverloads constructor(
         isAntiAlias = true
         style = Paint.Style.FILL
     }
+    private val legPaint = Paint().apply {
+        isAntiAlias = true
+        style = Paint.Style.STROKE
+        strokeWidth = 4f
+        color = Color.BLACK
+    }
+    private var animationTime = 0f
 
     var onBugHit: ((Bug) -> Unit)? = null
     var onMiss: (() -> Unit)? = null
@@ -33,6 +40,7 @@ class GameView @JvmOverloads constructor(
         bugs.forEach { bug ->
             bug.update(deltaTime, width, height)
         }
+        animationTime += deltaTime
         invalidate()
     }
 
@@ -40,29 +48,78 @@ class GameView @JvmOverloads constructor(
         super.onDraw(canvas)
 
         bugs.forEach { bug ->
+            val centerX = bug.x + bug.size / 2
+            val centerY = bug.y + bug.size / 2
+            val legWave = Math.sin(animationTime * 10.0 + bug.x.toDouble()).toFloat() * 5f
+
             bugPaint.color = when (bug.type) {
                 BugType.NORMAL -> Color.parseColor("#8B4513")
                 BugType.FAST -> Color.parseColor("#FF4500")
                 BugType.RARE -> Color.parseColor("#FFD700")
             }
 
-            // тело жука
+            // ножки слева
+            for (i in 0..2) {
+                val legY = bug.y + bug.size * (0.3f + i * 0.2f)
+                canvas.drawLine(
+                    centerX - bug.size * 0.2f,
+                    legY,
+                    centerX - bug.size * 0.4f,
+                    legY + legWave * (if (i % 2 == 0) 1 else -1),
+                    legPaint
+                )
+            }
+
+            // ножки справа
+            for (i in 0..2) {
+                val legY = bug.y + bug.size * (0.3f + i * 0.2f)
+                canvas.drawLine(
+                    centerX + bug.size * 0.2f,
+                    legY,
+                    centerX + bug.size * 0.4f,
+                    legY - legWave * (if (i % 2 == 0) 1 else -1),
+                    legPaint
+                )
+            }
+
+            // тело
             canvas.drawOval(
-                bug.x,
-                bug.y,
-                bug.x + bug.size,
-                bug.y + bug.size,
+                bug.x + bug.size * 0.1f,
+                bug.y + bug.size * 0.2f,
+                bug.x + bug.size * 0.9f,
+                bug.y + bug.size * 0.9f,
                 bugPaint
             )
 
             // голова
-            val headSize = bug.size * 0.3f
             canvas.drawCircle(
-                bug.x + bug.size / 2,
-                bug.y,
-                headSize,
+                centerX,
+                bug.y + bug.size * 0.15f,
+                bug.size * 0.25f,
                 bugPaint
             )
+
+            // усики
+            val antennaAngle = Math.sin(animationTime * 8.0 + bug.x.toDouble()).toFloat() * 0.2f
+            canvas.drawLine(
+                centerX - bug.size * 0.1f,
+                bug.y + bug.size * 0.05f,
+                centerX - bug.size * 0.2f,
+                bug.y - bug.size * 0.1f + antennaAngle * 10,
+                legPaint
+            )
+            canvas.drawLine(
+                centerX + bug.size * 0.1f,
+                bug.y + bug.size * 0.05f,
+                centerX + bug.size * 0.2f,
+                bug.y - bug.size * 0.1f - antennaAngle * 10,
+                legPaint
+            )
+
+            // глаза
+            bugPaint.color = Color.BLACK
+            canvas.drawCircle(centerX - bug.size * 0.08f, bug.y + bug.size * 0.12f, bug.size * 0.04f, bugPaint)
+            canvas.drawCircle(centerX + bug.size * 0.08f, bug.y + bug.size * 0.12f, bug.size * 0.04f, bugPaint)
         }
     }
 

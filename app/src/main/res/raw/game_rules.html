@@ -1,3 +1,84 @@
-<h1>Правила игры</h1>
-<p>Управляйте персонажем и уничтожайте тараканов, набирая как можно больше очков.</p>
-<p>Собирайте бонусы, следите за временем раунда и выбирайте подходящие настройки игры.</p>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 16px;
+            background: #0F172A;
+            color: #F8FAFC;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #38BDF8;
+            font-size: 24px;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #1E293B;
+            padding-bottom: 8px;
+        }
+        h2 {
+            color: #22D3EE;
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        ul {
+            margin: 8px 0;
+            padding-left: 24px;
+        }
+        li {
+            margin: 6px 0;
+        }
+        .bug-type {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 2px;
+        }
+        .normal { background: #8B4513; color: white; }
+        .fast { background: #FF4500; color: white; }
+        .rare { background: #FFD700; color: black; }
+    </style>
+</head>
+<body>
+    <h1>🐛 Правила игры "Жуки"</h1>
+
+    <h2>Цель игры</h2>
+    <p>Уничтожайте жуков, бегающих по экрану, и набирайте максимум очков за отведенное время!</p>
+
+    <h2>Типы жуков</h2>
+    <ul>
+        <li><span class="bug-type normal">Обычный</span> – медленный, крупный, +10 очков</li>
+        <li><span class="bug-type fast">Быстрый</span> – быстрый, средний, +20 очков</li>
+        <li><span class="bug-type rare">Редкий</span> – очень быстрый, маленький, +50 очков</li>
+    </ul>
+
+    <h2>Правила</h2>
+    <ul>
+        <li>Касайтесь жуков для их уничтожения и получения очков</li>
+        <li>Промах по пустому месту – штраф -5 очков</li>
+        <li>Раунд заканчивается по истечении таймера</li>
+        <li>Жуки отскакивают от краев экрана</li>
+    </ul>
+
+    <h2>Настройки игры</h2>
+    <ul>
+        <li><strong>Скорость игры</strong> – множитель скорости всех жуков</li>
+        <li><strong>Макс. жуков</strong> – количество жуков на экране одновременно</li>
+        <li><strong>Длительность раунда</strong> – время игры в секундах</li>
+    </ul>
+
+    <h2>Результаты</h2>
+    <p>После окончания раунда показываются:</p>
+    <ul>
+        <li>Итоговые очки</li>
+        <li>Количество попаданий</li>
+        <li>Количество промахов</li>
+        <li>Точность (%)</li>
+    </ul>
+
+    <p style="margin-top: 24px; text-align: center; color: #64748B;">Удачной охоты! 🎯</p>
+</body>
+</html>

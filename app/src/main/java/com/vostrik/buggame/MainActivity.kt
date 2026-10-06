@@ -88,10 +88,13 @@ class MainActivity : AppCompatActivity() {
                 tabSettings.visibility = if (tab.position == 3) View.VISIBLE else View.GONE
                 tabGame.visibility = if (tab.position == 4) View.VISIBLE else View.GONE
 
+                tabContent.swipeEnabled = tab.position != 4
+
                 if (tab.position == 4) {
                     startGame()
                 } else {
                     gameManager?.stop()
+                    gameManager = null
                 }
             }
 

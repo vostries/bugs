@@ -13,11 +13,13 @@ class SwipeFrameLayout @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr) {
     var onSwipe: ((Int) -> Unit)? = null
+    var swipeEnabled = true
     private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
     private var startX = 0f
     private var startY = 0f
 
     override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
+        if (!swipeEnabled) return false
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 startX = event.x
@@ -33,6 +35,7 @@ class SwipeFrameLayout @JvmOverloads constructor(
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (!swipeEnabled) return false
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 startX = event.x
