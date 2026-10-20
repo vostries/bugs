@@ -17,10 +17,18 @@ import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.Spinner
 import android.widget.TextView
+import android.widget.Toast
 import android.webkit.WebView
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.tabs.TabLayout
+import com.vostrik.buggame.database.AppDatabase
+import com.vostrik.buggame.database.UserProfile
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -31,6 +39,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var editTextFullName: EditText
     private lateinit var radioGroupGender: RadioGroup
     private lateinit var spinnerCourse: Spinner
+    private lateinit var spinnerProfiles: Spinner
     private lateinit var seekBarDifficulty: SeekBar
     private lateinit var textViewDifficulty: TextView
     private lateinit var calendarView: CalendarView
@@ -38,6 +47,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var textViewResult: TextView
     private lateinit var imageViewZodiac: ImageView
     private var gameManager: GameManager? = null
+    private lateinit var database: AppDatabase
+    private var profiles = mutableListOf<UserProfile>()
+    private var selectedProfileId: Long? = null
+    private val profileScope = MainScope()
 
     private var selectedDay = 1
     private var selectedMonth = 0
@@ -143,16 +156,24 @@ class MainActivity : AppCompatActivity() {
         })
 
         player = Player()
+        database = AppDatabase.getDatabase(this)
 
         editTextFullName = findViewById(R.id.editTextFullName)
         radioGroupGender = findViewById(R.id.radioGroupGender)
         spinnerCourse = findViewById(R.id.spinnerCourse)
+        spinnerProfiles = findViewById(R.id.spinnerProfiles)
         seekBarDifficulty = findViewById(R.id.seekBarDifficulty)
         textViewDifficulty = findViewById(R.id.textViewDifficulty)
         calendarView = findViewById(R.id.calendarView)
         buttonShow = findViewById(R.id.buttonShow)
         textViewResult = findViewById(R.id.textViewResult)
         imageViewZodiac = findViewById(R.id.imageViewZodiac)
+
+        buttonShow.isEnabled = false
+        profileScope.launch {
+            loadProfiles()
+            buttonShow.isEnabled = true
+        }
 
         val courses = resources.getStringArray(R.array.courses)
         spinnerCourse.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, courses).apply {
@@ -172,6 +193,7 @@ class MainActivity : AppCompatActivity() {
         val defaultCalendar = Calendar.getInstance()
         defaultCalendar.set(2000, 0, 1)
         calendarView.date = defaultCalendar.timeInMillis
+        player.birthDate = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(defaultCalendar.time)
         selectedDay = 1
         selectedMonth = 1
 
@@ -185,32 +207,41 @@ class MainActivity : AppCompatActivity() {
         }
 
         buttonShow.setOnClickListener {
-            player.fullName = editTextFullName.text.toString()
-            player.gender = findViewById<RadioButton>(radioGroupGender.checkedRadioButtonId).text.toString()
-            player.course = spinnerCourse.selectedItemPosition + 1
-            player.zodiacSign = ZodiacHelper.getZodiacSign(selectedDay, selectedMonth)
-
-            val result = """
-                ФИО: ${player.fullName}
-                Пол: ${player.gender}
-                Курс: ${player.course}
-                Уровень сложности: ${player.difficulty}
-                Дата рождения: ${player.birthDate}
-                Знак зодиака: ${player.zodiacSign}
-            """.trimIndent()
-
-            textViewResult.text = result
-            textViewResult.visibility = TextView.VISIBLE
-
-            val zodiacEmoji = ZodiacHelper.getZodiacEmoji(player.zodiacSign)
-            val bitmap = createZodiacBitmap(zodiacEmoji)
-            imageViewZodiac.setImageBitmap(bitmap)
-            imageViewZodiac.visibility = ImageView.VISIBLE
+            val fullName = editTextFullName.text.toString().trim()
+            if (fullName.isEmpty()) {
+                editTextFullName.error = getString(R.string.full_name_required)
+                return@setOnClickListener
+            }
+            createNewProfile(fullName)
         }
 
         if (intent.getBooleanExtra("START_GAME_TAB", false)) {
             tabLayout.getTabAt(4)?.select()
         }
+    }
+
+    override fun onDestroy() {
+        profileScope.cancel()
+        super.onDestroy()
+    }
+
+    private fun showPlayerInfo(fullName: String) {
+        player.fullName = fullName
+        player.gender = findViewById<RadioButton>(radioGroupGender.checkedRadioButtonId).text.toString()
+        player.course = spinnerCourse.selectedItemPosition + 1
+        player.zodiacSign = ZodiacHelper.getZodiacSign(selectedDay, selectedMonth)
+
+        textViewResult.text = """
+            ФИО: ${player.fullName}
+            Пол: ${player.gender}
+            Курс: ${player.course}
+            Уровень сложности: ${player.difficulty}
+            Дата рождения: ${player.birthDate}
+            Знак зодиака: ${player.zodiacSign}
+        """.trimIndent()
+        textViewResult.visibility = View.VISIBLE
+        imageViewZodiac.setImageBitmap(createZodiacBitmap(ZodiacHelper.getZodiacEmoji(player.zodiacSign)))
+        imageViewZodiac.visibility = View.VISIBLE
     }
 
     private fun createZodiacBitmap(emoji: String): Bitmap {
@@ -276,5 +307,59 @@ class MainActivity : AppCompatActivity() {
         intent.putExtra("HITS", result.hits)
         intent.putExtra("MISSES", result.misses)
         startActivity(intent)
+    }
+
+    private suspend fun loadProfiles() {
+        val allProfiles = withContext(Dispatchers.IO) {
+            database.profileDao().getAllProfiles()
+        }
+        profiles.clear()
+        profiles.add(UserProfile(0, getString(R.string.profile_not_selected)))
+        profiles.addAll(allProfiles)
+
+        spinnerProfiles.onItemSelectedListener = null
+        spinnerProfiles.adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            profiles.map { it.fullName }
+        ).apply {
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        }
+        spinnerProfiles.setSelection(profiles.indexOfFirst { it.id == selectedProfileId }.coerceAtLeast(0))
+        spinnerProfiles.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
+                selectedProfileId = profiles[position].id.takeIf { it != 0L }
+                player.fullName = if (selectedProfileId == null) "" else profiles[position].fullName
+            }
+
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
+                selectedProfileId = null
+                player.fullName = ""
+            }
+        }
+    }
+
+    private fun createNewProfile(fullName: String) {
+        buttonShow.isEnabled = false
+        spinnerProfiles.isEnabled = false
+        profileScope.launch {
+            try {
+                val profileId = withContext(Dispatchers.IO) {
+                    database.profileDao().insertProfile(UserProfile(fullName = fullName))
+                }
+                if (profileId == -1L) {
+                    editTextFullName.error = getString(R.string.profile_already_exists)
+                    return@launch
+                }
+
+                selectedProfileId = profileId
+                loadProfiles()
+                showPlayerInfo(fullName)
+                Toast.makeText(this@MainActivity, R.string.profile_created, Toast.LENGTH_SHORT).show()
+            } finally {
+                buttonShow.isEnabled = true
+                spinnerProfiles.isEnabled = true
+            }
+        }
     }
 }

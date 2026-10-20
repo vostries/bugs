@@ -23,6 +23,15 @@
     </string-array>
     <string name="difficulty_label">Уровень сложности:</string>
     <string name="birth_date_label">Дата рождения:</string>
-    <string name="show_button">Показать</string>
+    <string name="show_button">Зарегистрироваться</string>
     <string name="zodiac_sign">Знак зодиака</string>
+    <string name="select_profile">Выберите профиль:</string>
+    <string name="or_create_new">— или создайте новый —</string>
+    <string name="profile_not_selected">Профиль не выбран</string>
+    <string name="full_name_required">ФИО не может быть пустым</string>
+    <string name="profile_already_exists">Пользователь с таким именем уже существует</string>
+    <string name="profile_created">Профиль создан</string>
+    <string name="records_tab">Рекорды</string>
+    <string name="all_difficulties">Все сложности</string>
+    <string name="difficulty_filter">Фильтр по сложности:</string>
 </resources>
