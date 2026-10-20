@@ -16,7 +16,6 @@ data class Bug(
         x += speedX * deltaTime
         y += speedY * deltaTime
 
-        // отскок от границ
         if (x <= 0 || x >= screenWidth - size) speedX = -speedX
         if (y <= 0 || y >= screenHeight - size) speedY = -speedY
 

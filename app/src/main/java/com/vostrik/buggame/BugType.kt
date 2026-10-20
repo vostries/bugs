@@ -5,7 +5,7 @@ enum class BugType(
     val sizeMultiplier: Float,
     val points: Int
 ) {
-    NORMAL(1.0f, 1.0f, 10),
-    FAST(2.0f, 0.7f, 30),
-    RARE(3.0f, 0.5f, 50)
+    NORMAL(1.0f, 1.5f, 10),
+    FAST(2.0f, 1.0f, 30),
+    RARE(3.0f, 0.7f, 50)
 }
