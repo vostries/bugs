@@ -11,6 +11,7 @@ import android.widget.Button
 import android.widget.CalendarView
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.AdapterView
 import android.widget.ListView
 import android.widget.RadioButton
 import android.widget.RadioGroup
@@ -127,6 +128,10 @@ class MainActivity : AppCompatActivity() {
                     gameManager?.stop()
                     gameManager = null
                 }
+
+                if (tab.position == 5) {
+                    loadRecords(null)
+                }
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab) = Unit
@@ -143,6 +148,12 @@ class MainActivity : AppCompatActivity() {
             listOf(getString(R.string.all_difficulties)) + (1..5).map { getString(R.string.difficulty_option, it) }
         ).apply {
             setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        }
+        spinnerRecordDifficulty.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                loadRecords(if (position == 0) null else position)
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
         seekBarGameSpeed.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -418,6 +429,28 @@ class MainActivity : AppCompatActivity() {
             } finally {
                 buttonShow.isEnabled = true
                 spinnerProfiles.isEnabled = true
+            }
+        }
+    }
+
+    private fun loadRecords(difficulty: Int?) {
+        profileScope.launch {
+            val records = withContext(Dispatchers.IO) {
+                if (difficulty == null) {
+                    database.recordDao().getTopRecords()
+                } else {
+                    database.recordDao().getTopRecordsByDifficulty(difficulty)
+                }
+            }
+            val listView = findViewById<ListView>(R.id.listViewRecords)
+            val emptyView = findViewById<TextView>(R.id.textViewRecordsEmpty)
+            if (records.isEmpty()) {
+                listView.visibility = View.GONE
+                emptyView.visibility = View.VISIBLE
+            } else {
+                listView.visibility = View.VISIBLE
+                emptyView.visibility = View.GONE
+                listView.adapter = RecordsAdapter(this@MainActivity, records)
             }
         }
     }
