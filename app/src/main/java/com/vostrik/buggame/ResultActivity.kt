@@ -29,10 +29,7 @@ class ResultActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.textViewAccuracy).text = "Точность: $accuracy%"
 
         findViewById<Button>(R.id.buttonPlayAgain).setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            intent.putExtra("START_GAME_TAB", true)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
+            setResult(RESULT_OK, Intent().putExtra("PLAY_AGAIN", true))
             finish()
         }
     }

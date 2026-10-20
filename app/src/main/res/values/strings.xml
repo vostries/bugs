@@ -34,4 +34,8 @@
     <string name="records_tab">Рекорды</string>
     <string name="all_difficulties">Все сложности</string>
     <string name="difficulty_filter">Фильтр по сложности:</string>
+    <string name="records_empty">Рекордов пока нет</string>
+    <string name="difficulty_option">Сложность %1$d</string>
+    <string name="profile_required_for_game">Сначала выберите профиль</string>
+    <string name="record_save_failed">Не удалось сохранить рекорд</string>
 </resources>

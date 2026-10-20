@@ -9,6 +9,7 @@
         android:id="@+id/tabLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:tabMode="scrollable"
         app:tabTextAppearance="@style/TabTextAppearance" />
 
     <com.vostrik.buggame.SwipeFrameLayout
@@ -59,6 +60,15 @@
             android:visibility="gone">
 
             <include layout="@layout/tab_game" />
+
+        </FrameLayout>
+        <FrameLayout
+            android:id="@+id/tabRecords"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <include layout="@layout/tab_records" />
 
         </FrameLayout>
 

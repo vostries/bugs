@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 
 data class RecordWithProfile(
     val id: Long,
@@ -48,4 +49,15 @@ interface RecordDao {
 
     @Query("UPDATE game_records SET score = :newScore, timestamp = :timestamp WHERE id = :recordId")
     fun updateRecord(recordId: Long, newScore: Int, timestamp: Long)
+
+    @Transaction
+    fun saveBestRecord(record: GameRecord) {
+        require(record.difficulty in 1..5)
+        val best = getBestRecordForProfile(record.profileId, record.difficulty)
+        if (best == null) {
+            insertRecord(record)
+        } else if (record.score > best.score) {
+            updateRecord(best.id, record.score, record.timestamp)
+        }
+    }
 }

@@ -20,9 +20,11 @@ import android.widget.TextView
 import android.widget.Toast
 import android.webkit.WebView
 import android.view.View
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.tabs.TabLayout
 import com.vostrik.buggame.database.AppDatabase
+import com.vostrik.buggame.database.GameRecord
 import com.vostrik.buggame.database.UserProfile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
@@ -51,6 +53,18 @@ class MainActivity : AppCompatActivity() {
     private var profiles = mutableListOf<UserProfile>()
     private var selectedProfileId: Long? = null
     private val profileScope = MainScope()
+    private val resultLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK && result.data?.getBooleanExtra("PLAY_AGAIN", false) == true) {
+            val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
+            if (tabLayout.selectedTabPosition == 4) {
+                startGame()
+            } else {
+                tabLayout.getTabAt(4)?.select()
+            }
+        }
+    }
 
     private var selectedDay = 1
     private var selectedMonth = 0
@@ -66,6 +80,8 @@ class MainActivity : AppCompatActivity() {
         val tabAuthors = findViewById<View>(R.id.tabAuthors)
         val tabSettings = findViewById<View>(R.id.tabSettings)
         val tabGame = findViewById<View>(R.id.tabGame)
+        val tabRecords = findViewById<View>(R.id.tabRecords)
+        val spinnerRecordDifficulty = findViewById<Spinner>(R.id.spinnerRecordDifficulty)
         val seekBarGameSpeed = findViewById<SeekBar>(R.id.seekBarGameSpeed)
         val textViewGameSpeed = findViewById<TextView>(R.id.textViewGameSpeed)
         val seekBarMaxCockroaches = findViewById<SeekBar>(R.id.seekBarMaxCockroaches)
@@ -93,6 +109,7 @@ class MainActivity : AppCompatActivity() {
         tabLayout.addTab(tabLayout.newTab().setText(R.string.authors_tab))
         tabLayout.addTab(tabLayout.newTab().setText(R.string.settings_tab))
         tabLayout.addTab(tabLayout.newTab().setText(R.string.game_tab))
+        tabLayout.addTab(tabLayout.newTab().setText(R.string.records_tab))
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 tabRegistration.visibility = if (tab.position == 0) View.VISIBLE else View.GONE
@@ -100,6 +117,7 @@ class MainActivity : AppCompatActivity() {
                 tabAuthors.visibility = if (tab.position == 2) View.VISIBLE else View.GONE
                 tabSettings.visibility = if (tab.position == 3) View.VISIBLE else View.GONE
                 tabGame.visibility = if (tab.position == 4) View.VISIBLE else View.GONE
+                tabRecords.visibility = if (tab.position == 5) View.VISIBLE else View.GONE
 
                 tabContent.swipeEnabled = tab.position != 4
 
@@ -117,6 +135,14 @@ class MainActivity : AppCompatActivity() {
         tabContent.onSwipe = { direction ->
             val nextPosition = (tabLayout.selectedTabPosition + direction).coerceIn(0, tabLayout.tabCount - 1)
             tabLayout.getTabAt(nextPosition)?.select()
+        }
+
+        spinnerRecordDifficulty.adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            listOf(getString(R.string.all_difficulties)) + (1..5).map { getString(R.string.difficulty_option, it) }
+        ).apply {
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         }
 
         seekBarGameSpeed.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -221,6 +247,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        gameManager?.stop()
+        gameManager = null
         profileScope.cancel()
         super.onDestroy()
     }
@@ -268,6 +296,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startGame() {
+        val profileId = selectedProfileId
+        if (profileId == null) {
+            Toast.makeText(this, R.string.profile_required_for_game, Toast.LENGTH_SHORT).show()
+            findViewById<TabLayout>(R.id.tabLayout).getTabAt(0)?.select()
+            return
+        }
+
         val gameView = findViewById<GameView>(R.id.gameView)
         val textViewScore = findViewById<TextView>(R.id.textViewScore)
         val textViewTimer = findViewById<TextView>(R.id.textViewTimer)
@@ -279,7 +314,7 @@ class MainActivity : AppCompatActivity() {
         textViewTimer.text = ""
         gameView.setBugs(emptyList())
 
-        val gameSpeed = (seekBarGameSpeed.progress + 1).toFloat()
+        val difficulty = (seekBarGameSpeed.progress + 1).coerceIn(1, 5)
         val maxBugs = seekBarMaxCockroaches.progress + 1
         val roundDuration = seekBarRoundDuration.progress + 30
 
@@ -287,7 +322,7 @@ class MainActivity : AppCompatActivity() {
             gameView = gameView,
             roundDuration = roundDuration,
             maxBugs = maxBugs,
-            gameSpeed = gameSpeed,
+            gameSpeed = difficulty.toFloat(),
             onScoreUpdate = { score ->
                 textViewScore.text = "Очки: $score"
             },
@@ -295,10 +330,34 @@ class MainActivity : AppCompatActivity() {
                 textViewTimer.text = seconds.toString()
             },
             onGameEnd = { result ->
-                showGameResult(result)
+                saveGameResult(result, profileId, difficulty)
             }
         )
         gameManager?.start()
+    }
+
+    private fun saveGameResult(result: GameResult, profileId: Long, difficulty: Int) {
+        (application as BugGameApplication).persistenceScope.launch {
+            try {
+                database.recordDao().saveBestRecord(
+                    GameRecord(
+                        profileId = profileId,
+                        score = result.score,
+                        difficulty = difficulty
+                    )
+                )
+                withContext(Dispatchers.Main) {
+                    if (!isFinishing && !isDestroyed) showGameResult(result)
+                }
+            } catch (error: Exception) {
+                withContext(Dispatchers.Main) {
+                    if (!isFinishing && !isDestroyed) {
+                        Toast.makeText(this@MainActivity, R.string.record_save_failed, Toast.LENGTH_LONG).show()
+                        showGameResult(result)
+                    }
+                }
+            }
+        }
     }
 
     private fun showGameResult(result: GameResult) {
@@ -306,7 +365,7 @@ class MainActivity : AppCompatActivity() {
         intent.putExtra("SCORE", result.score)
         intent.putExtra("HITS", result.hits)
         intent.putExtra("MISSES", result.misses)
-        startActivity(intent)
+        resultLauncher.launch(intent)
     }
 
     private suspend fun loadProfiles() {
