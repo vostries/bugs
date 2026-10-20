@@ -12,5 +12,6 @@ data class UserProfile(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val fullName: String,
+    val course: Int = 1,
     val createdAt: Long = System.currentTimeMillis()
 )

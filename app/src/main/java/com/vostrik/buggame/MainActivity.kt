@@ -415,7 +415,7 @@ class MainActivity : AppCompatActivity() {
         profileScope.launch {
             try {
                 val profileId = withContext(Dispatchers.IO) {
-                    database.profileDao().insertProfile(UserProfile(fullName = fullName))
+                    database.profileDao().insertProfile(UserProfile(fullName = fullName, course = player.course))
                 }
                 if (profileId == -1L) {
                     editTextFullName.error = getString(R.string.profile_already_exists)

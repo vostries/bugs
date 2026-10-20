@@ -10,6 +10,7 @@ data class RecordWithProfile(
     val id: Long,
     val profileId: Long,
     val fullName: String,
+    val course: Int,
     val score: Int,
     val difficulty: Int,
     val timestamp: Long
@@ -18,7 +19,7 @@ data class RecordWithProfile(
 @Dao
 interface RecordDao {
     @Query("""
-        SELECT r.id, r.profileId, p.fullName, r.score, r.difficulty, r.timestamp
+        SELECT r.id, r.profileId, p.fullName, p.course, r.score, r.difficulty, r.timestamp
         FROM game_records r
         INNER JOIN user_profiles p ON r.profileId = p.id
         ORDER BY r.score DESC
@@ -27,7 +28,7 @@ interface RecordDao {
     fun getTopRecords(limit: Int = 10): List<RecordWithProfile>
 
     @Query("""
-        SELECT r.id, r.profileId, p.fullName, r.score, r.difficulty, r.timestamp
+        SELECT r.id, r.profileId, p.fullName, p.course, r.score, r.difficulty, r.timestamp
         FROM game_records r
         INNER JOIN user_profiles p ON r.profileId = p.id
         WHERE r.difficulty = :difficulty

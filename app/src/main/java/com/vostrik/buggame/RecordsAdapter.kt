@@ -20,6 +20,7 @@ class RecordsAdapter(
         view.findViewById<TextView>(R.id.textViewPlace).text = "${position + 1}"
         view.findViewById<TextView>(R.id.textViewPlayerName).text = record.fullName
         view.findViewById<TextView>(R.id.textViewDifficulty).text = "Сложность ${record.difficulty}"
+        view.findViewById<TextView>(R.id.textViewCourse).text = "Курс ${record.course}"
         view.findViewById<TextView>(R.id.textViewScore).text = record.score.toString()
         return view
     }
