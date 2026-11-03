@@ -11,7 +11,8 @@ class GameManager(
     private val bonusInterval: Int,
     private val onScoreUpdate: (Int) -> Unit,
     private val onTimeUpdate: (Int) -> Unit,
-    private val onGameEnd: (GameResult) -> Unit
+    private val onGameEnd: (GameResult) -> Unit,
+    private val onGravityModeChanged: (Boolean) -> Unit = {}
 ) {
     private val bugs = mutableListOf<Bug>()
     private var bonus: Bonus? = null
@@ -106,6 +107,7 @@ class GameManager(
 
                 if (isGravityMode && currentTime >= gravityEndTime) {
                     isGravityMode = false
+                    onGravityModeChanged(false)
                 }
 
                 val gravityX = if (isGravityMode) currentGravityX * 300f else 0f
@@ -189,6 +191,7 @@ class GameManager(
         gravityEndTime = System.currentTimeMillis() + gravityDuration
         bonus = null
         gameView.setBonus(null)
+        onGravityModeChanged(true)
     }
 
     private fun endGame() {

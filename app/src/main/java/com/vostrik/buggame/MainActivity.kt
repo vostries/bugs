@@ -9,6 +9,8 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.media.AudioAttributes
+import android.media.SoundPool
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.Button
@@ -60,6 +62,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private val profileScope = MainScope()
     private lateinit var sensorManager: SensorManager
     private var accelerometer: Sensor? = null
+    private lateinit var soundPool: SoundPool
+    private var bugScreamSoundId: Int = 0
+    private var bugScreamStreamId: Int = 0
     private val resultLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -203,6 +208,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_GAME)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        soundPool = SoundPool.Builder()
+            .setMaxStreams(2)
+            .setAudioAttributes(audioAttributes)
+            .build()
+        bugScreamSoundId = soundPool.load(this, R.raw.bug_scream, 1)
+
         editTextFullName = findViewById(R.id.editTextFullName)
         radioGroupGender = findViewById(R.id.radioGroupGender)
         spinnerCourse = findViewById(R.id.spinnerCourse)
@@ -269,6 +284,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         gameManager?.stop()
         gameManager = null
         profileScope.cancel()
+        soundPool.release()
         super.onDestroy()
     }
 
@@ -282,6 +298,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     override fun onPause() {
         super.onPause()
         sensorManager.unregisterListener(this)
+        if (bugScreamStreamId != 0) {
+            soundPool.stop(bugScreamStreamId)
+            bugScreamStreamId = 0
+        }
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
@@ -374,6 +394,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             },
             onGameEnd = { result ->
                 saveGameResult(result, profileId, difficulty)
+            },
+            onGravityModeChanged = { isActive ->
+                if (isActive) {
+                    bugScreamStreamId = soundPool.play(bugScreamSoundId, 1.0f, 1.0f, 1, -1, 1.0f)
+                } else {
+                    if (bugScreamStreamId != 0) {
+                        soundPool.stop(bugScreamStreamId)
+                        bugScreamStreamId = 0
+                    }
+                }
             }
         )
         gameManager?.start()
