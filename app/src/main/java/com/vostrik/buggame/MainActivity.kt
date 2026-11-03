@@ -328,12 +328,14 @@ class MainActivity : AppCompatActivity() {
         val difficulty = (seekBarGameSpeed.progress + 1).coerceIn(1, 5)
         val maxBugs = seekBarMaxCockroaches.progress + 1
         val roundDuration = seekBarRoundDuration.progress + 30
+        val bonusInterval = findViewById<SeekBar>(R.id.seekBarBonusInterval).progress + 1
 
         gameManager = GameManager(
             gameView = gameView,
             roundDuration = roundDuration,
             maxBugs = maxBugs,
             gameSpeed = difficulty.toFloat(),
+            bonusInterval = bonusInterval,
             onScoreUpdate = { score ->
                 textViewScore.text = "Очки: $score"
             },

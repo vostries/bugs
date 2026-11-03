@@ -8,16 +8,19 @@ class GameManager(
     private val roundDuration: Int,
     private val maxBugs: Int,
     private val gameSpeed: Float,
+    private val bonusInterval: Int,
     private val onScoreUpdate: (Int) -> Unit,
     private val onTimeUpdate: (Int) -> Unit,
     private val onGameEnd: (GameResult) -> Unit
 ) {
     private val bugs = mutableListOf<Bug>()
+    private var bonus: Bonus? = null
     private var score = 0
     private var hits = 0
     private var misses = 0
     private var isRunning = false
     private var timer: CountDownTimer? = null
+    private var bonusTimer: CountDownTimer? = null
     private var lastUpdateTime = System.currentTimeMillis()
 
     init {
@@ -27,6 +30,9 @@ class GameManager(
         gameView.onMiss = {
             handleMiss()
         }
+        gameView.onBonusHit = {
+            handleBonusHit()
+        }
     }
 
     fun start() {
@@ -35,16 +41,19 @@ class GameManager(
         hits = 0
         misses = 0
         bugs.clear()
+        bonus = null
         lastUpdateTime = System.currentTimeMillis()
 
         spawnInitialBugs()
         startGameLoop()
         startTimer()
+        startBonusTimer()
     }
 
     fun stop() {
         isRunning = false
         timer?.cancel()
+        bonusTimer?.cancel()
     }
 
     private fun spawnInitialBugs() {
@@ -116,6 +125,38 @@ class GameManager(
                 endGame()
             }
         }.start()
+    }
+
+    private fun startBonusTimer() {
+        bonusTimer = object : CountDownTimer((bonusInterval * 1000).toLong(), (bonusInterval * 1000).toLong()) {
+            override fun onTick(millisUntilFinished: Long) = Unit
+
+            override fun onFinish() {
+                spawnBonus()
+                if (isRunning) {
+                    start()
+                }
+            }
+        }.start()
+    }
+
+    private fun spawnBonus() {
+        val screenWidth = gameView.width
+        val screenHeight = gameView.height
+        if (screenWidth == 0 || screenHeight == 0) return
+
+        val size = 100f
+        bonus = Bonus(
+            x = Random.nextFloat() * (screenWidth - size),
+            y = Random.nextFloat() * (screenHeight - size),
+            size = size
+        )
+        gameView.setBonus(bonus)
+    }
+
+    private fun handleBonusHit() {
+        bonus = null
+        gameView.setBonus(null)
     }
 
     private fun handleBugHit(bug: Bug) {

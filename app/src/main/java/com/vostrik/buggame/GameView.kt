@@ -15,6 +15,7 @@ class GameView @JvmOverloads constructor(
 ) : View(context, attrs, defStyleAttr) {
 
     private val bugs = mutableListOf<Bug>()
+    private var bonus: Bonus? = null
     private val bugPaint = Paint().apply {
         isAntiAlias = true
         style = Paint.Style.FILL
@@ -25,14 +26,31 @@ class GameView @JvmOverloads constructor(
         strokeWidth = 4f
         color = Color.BLACK
     }
+    private val bonusPaint = Paint().apply {
+        isAntiAlias = true
+        style = Paint.Style.FILL
+        color = Color.parseColor("#FFD700")
+    }
+    private val bonusStrokePaint = Paint().apply {
+        isAntiAlias = true
+        style = Paint.Style.STROKE
+        strokeWidth = 6f
+        color = Color.parseColor("#FFA500")
+    }
     private var animationTime = 0f
 
     var onBugHit: ((Bug) -> Unit)? = null
     var onMiss: (() -> Unit)? = null
+    var onBonusHit: (() -> Unit)? = null
 
     fun setBugs(newBugs: List<Bug>) {
         bugs.clear()
         bugs.addAll(newBugs)
+        invalidate()
+    }
+
+    fun setBonus(newBonus: Bonus?) {
+        bonus = newBonus
         invalidate()
     }
 
@@ -46,6 +64,16 @@ class GameView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+
+        bonus?.let { b ->
+            canvas.drawCircle(b.x + b.size / 2, b.y + b.size / 2, b.size / 2, bonusPaint)
+            canvas.drawCircle(b.x + b.size / 2, b.y + b.size / 2, b.size / 2, bonusStrokePaint)
+            bonusPaint.color = Color.BLACK
+            bonusPaint.textSize = b.size * 0.5f
+            bonusPaint.textAlign = Paint.Align.CENTER
+            canvas.drawText("★", b.x + b.size / 2, b.y + b.size * 0.65f, bonusPaint)
+            bonusPaint.color = Color.parseColor("#FFD700")
+        }
 
         bugs.forEach { bug ->
             val centerX = bug.x + bug.size / 2
@@ -127,6 +155,13 @@ class GameView @JvmOverloads constructor(
         if (event.action == MotionEvent.ACTION_DOWN) {
             val x = event.x
             val y = event.y
+
+            bonus?.let {
+                if (it.contains(x, y)) {
+                    onBonusHit?.invoke()
+                    return true
+                }
+            }
 
             val hitBug = bugs.firstOrNull { it.contains(x, y) }
             if (hitBug != null) {
