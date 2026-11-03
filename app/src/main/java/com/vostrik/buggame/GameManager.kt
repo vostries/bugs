@@ -18,6 +18,8 @@ class GameManager(
     private var isGravityMode = false
     private var gravityEndTime = 0L
     private val gravityDuration = 15000L
+    private var currentGravityX = 0f
+    private var currentGravityY = 0f
     private var score = 0
     private var hits = 0
     private var misses = 0
@@ -106,8 +108,8 @@ class GameManager(
                     isGravityMode = false
                 }
 
-                val gravityX = if (isGravityMode) 0f else 0f
-                val gravityY = if (isGravityMode) 0f else 0f
+                val gravityX = if (isGravityMode) currentGravityX * 300f else 0f
+                val gravityY = if (isGravityMode) currentGravityY * 300f else 0f
                 gameView.updateBugs(deltaTime, gravityX, gravityY)
 
                 val screenWidth = gameView.width
@@ -175,6 +177,11 @@ class GameManager(
         score -= 5
         misses++
         onScoreUpdate(score)
+    }
+
+    fun updateGravity(x: Float, y: Float) {
+        currentGravityX = x
+        currentGravityY = y
     }
 
     private fun handleBonusCollected() {

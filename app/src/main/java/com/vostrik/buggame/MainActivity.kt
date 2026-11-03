@@ -5,6 +5,10 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.Button
@@ -36,7 +40,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private lateinit var player: Player
     private lateinit var editTextFullName: EditText
@@ -54,6 +58,8 @@ class MainActivity : AppCompatActivity() {
     private var profiles = mutableListOf<UserProfile>()
     private var selectedProfileId: Long? = null
     private val profileScope = MainScope()
+    private lateinit var sensorManager: SensorManager
+    private var accelerometer: Sensor? = null
     private val resultLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -194,6 +200,8 @@ class MainActivity : AppCompatActivity() {
 
         player = Player()
         database = AppDatabase.getDatabase(this)
+        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
         editTextFullName = findViewById(R.id.editTextFullName)
         radioGroupGender = findViewById(R.id.radioGroupGender)
@@ -263,6 +271,28 @@ class MainActivity : AppCompatActivity() {
         profileScope.cancel()
         super.onDestroy()
     }
+
+    override fun onResume() {
+        super.onResume()
+        accelerometer?.let {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        sensorManager.unregisterListener(this)
+    }
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        if (event?.sensor?.type == Sensor.TYPE_ACCELEROMETER) {
+            val x = event.values[0]
+            val y = event.values[1]
+            gameManager?.updateGravity(x, y)
+        }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
 
     private fun showPlayerInfo(fullName: String) {
         player.fullName = fullName
