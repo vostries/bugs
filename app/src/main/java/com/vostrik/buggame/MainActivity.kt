@@ -398,8 +398,14 @@ class MainActivity : AppCompatActivity() {
         spinnerProfiles.setSelection(profiles.indexOfFirst { it.id == selectedProfileId }.coerceAtLeast(0))
         spinnerProfiles.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
-                selectedProfileId = profiles[position].id.takeIf { it != 0L }
-                player.fullName = if (selectedProfileId == null) "" else profiles[position].fullName
+                val profile = profiles[position]
+                selectedProfileId = profile.id.takeIf { it != 0L }
+                if (selectedProfileId == null) {
+                    player.fullName = ""
+                } else {
+                    player.fullName = profile.fullName
+                    spinnerCourse.setSelection(profile.course - 1)
+                }
             }
 
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
@@ -414,8 +420,9 @@ class MainActivity : AppCompatActivity() {
         spinnerProfiles.isEnabled = false
         profileScope.launch {
             try {
+                val course = spinnerCourse.selectedItemPosition + 1
                 val profileId = withContext(Dispatchers.IO) {
-                    database.profileDao().insertProfile(UserProfile(fullName = fullName, course = player.course))
+                    database.profileDao().insertProfile(UserProfile(fullName = fullName, course = course))
                 }
                 if (profileId == -1L) {
                     editTextFullName.error = getString(R.string.profile_already_exists)
