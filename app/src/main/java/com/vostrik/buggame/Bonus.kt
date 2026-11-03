@@ -4,9 +4,9 @@ import java.util.UUID
 
 data class Bonus(
     val id: String = UUID.randomUUID().toString(),
-    val x: Float,
-    val y: Float,
-    val size: Float = 100f
+    var x: Float,
+    var y: Float,
+    val size: Float = 80f
 ) {
     fun contains(touchX: Float, touchY: Float): Boolean {
         val centerX = x + size / 2

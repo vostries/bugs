@@ -15,6 +15,9 @@ class GameManager(
 ) {
     private val bugs = mutableListOf<Bug>()
     private var bonus: Bonus? = null
+    private var isGravityMode = false
+    private var gravityEndTime = 0L
+    private val gravityDuration = 15000L
     private var score = 0
     private var hits = 0
     private var misses = 0
@@ -30,8 +33,8 @@ class GameManager(
         gameView.onMiss = {
             handleMiss()
         }
-        gameView.onBonusHit = {
-            handleBonusHit()
+        gameView.onBonusCollected = {
+            handleBonusCollected()
         }
     }
 
@@ -99,9 +102,14 @@ class GameManager(
                 val deltaTime = (currentTime - lastUpdateTime) / 1000f
                 lastUpdateTime = currentTime
 
-                gameView.updateBugs(deltaTime)
+                if (isGravityMode && currentTime >= gravityEndTime) {
+                    isGravityMode = false
+                }
 
-                // респавн жуков
+                val gravityX = if (isGravityMode) 0f else 0f
+                val gravityY = if (isGravityMode) 0f else 0f
+                gameView.updateBugs(deltaTime, gravityX, gravityY)
+
                 val screenWidth = gameView.width
                 val screenHeight = gameView.height
                 while (bugs.size < maxBugs) {
@@ -141,22 +149,19 @@ class GameManager(
     }
 
     private fun spawnBonus() {
-        val screenWidth = gameView.width
-        val screenHeight = gameView.height
-        if (screenWidth == 0 || screenHeight == 0) return
-
-        val size = 100f
-        bonus = Bonus(
-            x = Random.nextFloat() * (screenWidth - size),
-            y = Random.nextFloat() * (screenHeight - size),
-            size = size
-        )
-        gameView.setBonus(bonus)
-    }
-
-    private fun handleBonusHit() {
-        bonus = null
-        gameView.setBonus(null)
+        if (bonus == null && !isGravityMode) {
+            val screenWidth = gameView.width
+            val screenHeight = gameView.height
+            if (screenWidth > 0 && screenHeight > 0) {
+                val size = 80f
+                bonus = Bonus(
+                    x = Random.nextFloat() * (screenWidth - size),
+                    y = Random.nextFloat() * (screenHeight - size),
+                    size = size
+                )
+                gameView.setBonus(bonus)
+            }
+        }
     }
 
     private fun handleBugHit(bug: Bug) {
@@ -170,6 +175,13 @@ class GameManager(
         score -= 5
         misses++
         onScoreUpdate(score)
+    }
+
+    private fun handleBonusCollected() {
+        isGravityMode = true
+        gravityEndTime = System.currentTimeMillis() + gravityDuration
+        bonus = null
+        gameView.setBonus(null)
     }
 
     private fun endGame() {

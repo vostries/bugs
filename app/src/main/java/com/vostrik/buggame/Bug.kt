@@ -12,9 +12,9 @@ data class Bug(
     val type: BugType,
     val points: Int = type.points
 ) {
-    fun update(deltaTime: Float, screenWidth: Int, screenHeight: Int) {
-        x += speedX * deltaTime
-        y += speedY * deltaTime
+    fun update(deltaTime: Float, screenWidth: Int, screenHeight: Int, gravityX: Float = 0f, gravityY: Float = 0f) {
+        x += (speedX + gravityX) * deltaTime
+        y += (speedY + gravityY) * deltaTime
 
         if (x <= 0 || x >= screenWidth - size) speedX = -speedX
         if (y <= 0 || y >= screenHeight - size) speedY = -speedY

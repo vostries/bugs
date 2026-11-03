@@ -41,7 +41,7 @@ class GameView @JvmOverloads constructor(
 
     var onBugHit: ((Bug) -> Unit)? = null
     var onMiss: (() -> Unit)? = null
-    var onBonusHit: (() -> Unit)? = null
+    var onBonusCollected: (() -> Unit)? = null
 
     fun setBugs(newBugs: List<Bug>) {
         bugs.clear()
@@ -54,9 +54,9 @@ class GameView @JvmOverloads constructor(
         invalidate()
     }
 
-    fun updateBugs(deltaTime: Float) {
+    fun updateBugs(deltaTime: Float, gravityX: Float = 0f, gravityY: Float = 0f) {
         bugs.forEach { bug ->
-            bug.update(deltaTime, width, height)
+            bug.update(deltaTime, width, height, gravityX, gravityY)
         }
         animationTime += deltaTime
         invalidate()
@@ -64,16 +64,6 @@ class GameView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-
-        bonus?.let { b ->
-            canvas.drawCircle(b.x + b.size / 2, b.y + b.size / 2, b.size / 2, bonusPaint)
-            canvas.drawCircle(b.x + b.size / 2, b.y + b.size / 2, b.size / 2, bonusStrokePaint)
-            bonusPaint.color = Color.BLACK
-            bonusPaint.textSize = b.size * 0.5f
-            bonusPaint.textAlign = Paint.Align.CENTER
-            canvas.drawText("★", b.x + b.size / 2, b.y + b.size * 0.65f, bonusPaint)
-            bonusPaint.color = Color.parseColor("#FFD700")
-        }
 
         bugs.forEach { bug ->
             val centerX = bug.x + bug.size / 2
@@ -149,6 +139,16 @@ class GameView @JvmOverloads constructor(
             canvas.drawCircle(centerX - bug.size * 0.08f, bug.y + bug.size * 0.12f, bug.size * 0.04f, bugPaint)
             canvas.drawCircle(centerX + bug.size * 0.08f, bug.y + bug.size * 0.12f, bug.size * 0.04f, bugPaint)
         }
+
+        bonus?.let { b ->
+            val pulse = (Math.sin(animationTime * 5.0) * 10f).toFloat()
+            val bonusRadius = b.size / 2 + pulse
+            canvas.drawCircle(b.x + b.size / 2, b.y + b.size / 2, bonusRadius, bonusPaint)
+
+            bonusPaint.color = Color.parseColor("#FFA500")
+            canvas.drawCircle(b.x + b.size / 2, b.y + b.size / 2, bonusRadius * 0.6f, bonusPaint)
+            bonusPaint.color = Color.parseColor("#FFD700")
+        }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -156,9 +156,11 @@ class GameView @JvmOverloads constructor(
             val x = event.x
             val y = event.y
 
-            bonus?.let {
-                if (it.contains(x, y)) {
-                    onBonusHit?.invoke()
+            bonus?.let { b ->
+                if (b.contains(x, y)) {
+                    onBonusCollected?.invoke()
+                    bonus = null
+                    invalidate()
                     return true
                 }
             }
@@ -176,3 +178,4 @@ class GameView @JvmOverloads constructor(
         return super.onTouchEvent(event)
     }
 }
+
