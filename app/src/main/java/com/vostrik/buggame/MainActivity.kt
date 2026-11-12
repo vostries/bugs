@@ -306,8 +306,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent?) {
         if (event?.sensor?.type == Sensor.TYPE_ACCELEROMETER) {
-            val x = event.values[0]
-            val y = event.values[1]
+            val x = -event.values[0]
+            val y = -event.values[1]
             gameManager?.updateGravity(x, y)
         }
     }
