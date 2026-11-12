@@ -176,7 +176,6 @@ class GameView @JvmOverloads constructor(
             val hitBug = bugs.firstOrNull { it.contains(x, y) }
             if (hitBug != null) {
                 onBugHit?.invoke(hitBug)
-                bugs.remove(hitBug)
                 invalidate()
             } else {
                 onMiss?.invoke()

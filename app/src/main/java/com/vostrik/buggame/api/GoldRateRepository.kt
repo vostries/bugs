@@ -17,27 +17,32 @@ class GoldRateRepository {
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.US)
 
     suspend fun getGoldRate(): GoldRate? = withContext(Dispatchers.IO) {
-        val calendar = Calendar.getInstance()
+        try {
+            val calendar = Calendar.getInstance()
 
-        for (i in 0..7) {
-            val dateStr = dateFormat.format(calendar.time)
-            val response = api.getDailyRates(dateStr)
+            for (i in 0..7) {
+                val dateStr = dateFormat.format(calendar.time)
+                val response = api.getDailyRates(dateStr)
 
-            if (response.isSuccessful) {
-                val valCurs = response.body()
-                val gold = valCurs?.valutes?.find { it.charCode == "XAU" }
+                if (response.isSuccessful) {
+                    val valCurs = response.body()
+                    val gold = valCurs?.valutes?.find { it.charCode == "XAU" }
 
-                if (gold != null && gold.value != null) {
-                    val valueStr = gold.value!!.replace(",", ".")
-                    val ratePerTroyOunce = valueStr.toDoubleOrNull() ?: return@withContext null
-                    val nominal = gold.nominal ?: 1
-                    val ratePerGram = (ratePerTroyOunce * nominal) / 31.1034768
+                    if (gold != null && gold.value != null) {
+                        val valueStr = gold.value!!.replace(",", ".")
+                        val ratePerTroyOunce = valueStr.toDoubleOrNull() ?: return@withContext null
+                        val nominal = gold.nominal ?: 1
+                        val ratePerGram = (ratePerTroyOunce * nominal) / 31.1034768
 
-                    return@withContext GoldRate(ratePerGram, dateStr)
+                        return@withContext GoldRate(ratePerGram, dateStr)
+                    }
                 }
-            }
 
-            calendar.add(Calendar.DAY_OF_YEAR, -1)
+                calendar.add(Calendar.DAY_OF_YEAR, -1)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return@withContext null
         }
 
         null

@@ -22,6 +22,11 @@ class GoldWidgetProvider : AppWidgetProvider() {
         appWidgetIds.forEach { appWidgetId ->
             updateWidget(context, appWidgetManager, appWidgetId)
         }
+
+        // Загружаем курс сразу при добавлении виджета
+        WorkManager.getInstance(context).enqueue(
+            androidx.work.OneTimeWorkRequestBuilder<GoldRateWorker>().build()
+        )
     }
 
     override fun onEnabled(context: Context) {
