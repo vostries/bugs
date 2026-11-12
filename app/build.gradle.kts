@@ -44,6 +44,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.simplexml)
     implementation(libs.okhttp)
+    implementation(libs.androidx.work.runtime.ktx)
 
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.appcompat)
