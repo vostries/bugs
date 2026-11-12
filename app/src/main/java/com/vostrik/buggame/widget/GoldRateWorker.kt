@@ -12,23 +12,26 @@ class GoldRateWorker(context: Context, params: WorkerParameters) : CoroutineWork
     override suspend fun doWork(): Result {
         val repo = GoldRateRepository.getInstance()
         val goldRate = repo.getGoldRate()
+        val prefs = applicationContext.getSharedPreferences("gold_widget", Context.MODE_PRIVATE)
 
         if (goldRate != null) {
-            val prefs = applicationContext.getSharedPreferences("gold_widget", Context.MODE_PRIVATE)
             prefs.edit()
+                .remove("error")
                 .putString("rate", String.format("%.2f ₽/г", goldRate.ratePerGram))
                 .putString("date", goldRate.date)
                 .apply()
-
-            val appWidgetManager = AppWidgetManager.getInstance(applicationContext)
-            val widgetComponent = ComponentName(applicationContext, GoldWidgetProvider::class.java)
-            val appWidgetIds = appWidgetManager.getAppWidgetIds(widgetComponent)
-
-            appWidgetIds.forEach { appWidgetId ->
-                GoldWidgetProvider.updateWidget(applicationContext, appWidgetManager, appWidgetId)
-            }
+        } else {
+            prefs.edit().putString("error", "Нет данных ЦБ").apply()
         }
 
-        return Result.success()
+        val appWidgetManager = AppWidgetManager.getInstance(applicationContext)
+        val widgetComponent = ComponentName(applicationContext, GoldWidgetProvider::class.java)
+        val appWidgetIds = appWidgetManager.getAppWidgetIds(widgetComponent)
+
+        appWidgetIds.forEach { appWidgetId ->
+            GoldWidgetProvider.updateWidget(applicationContext, appWidgetManager, appWidgetId)
+        }
+
+        return if (goldRate != null) Result.success() else Result.retry()
     }
 }

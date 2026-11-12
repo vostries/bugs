@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.vostrik.buggame.MainActivity
@@ -23,9 +24,8 @@ class GoldWidgetProvider : AppWidgetProvider() {
             updateWidget(context, appWidgetManager, appWidgetId)
         }
 
-        // Загружаем курс сразу при добавлении виджета
         WorkManager.getInstance(context).enqueue(
-            androidx.work.OneTimeWorkRequestBuilder<GoldRateWorker>().build()
+            OneTimeWorkRequestBuilder<GoldRateWorker>().build()
         )
     }
 
@@ -49,7 +49,8 @@ class GoldWidgetProvider : AppWidgetProvider() {
     companion object {
         fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
             val prefs = context.getSharedPreferences("gold_widget", Context.MODE_PRIVATE)
-            val rate = prefs.getString("rate", "...") ?: "..."
+            val error = prefs.getString("error", null)
+            val rate = prefs.getString("rate", null) ?: error ?: "..."
             val date = prefs.getString("date", "") ?: ""
 
             val intent = Intent(context, MainActivity::class.java)
@@ -61,7 +62,7 @@ class GoldWidgetProvider : AppWidgetProvider() {
             val views = RemoteViews(context.packageName, R.layout.widget_gold_rate).apply {
                 setTextViewText(R.id.widget_rate, rate)
                 setTextViewText(R.id.widget_date, date)
-                setOnClickPendingIntent(R.id.widget_rate, pendingIntent)
+                setOnClickPendingIntent(R.id.widget_container, pendingIntent)
             }
 
             appWidgetManager.updateAppWidget(appWidgetId, views)

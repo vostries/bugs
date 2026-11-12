@@ -19,26 +19,23 @@ class GoldRateRepository {
     suspend fun getGoldRate(): GoldRate? = withContext(Dispatchers.IO) {
         try {
             val calendar = Calendar.getInstance()
+            val dateTo = dateFormat.format(calendar.time)
+            calendar.add(Calendar.DAY_OF_YEAR, -7)
+            val dateFrom = dateFormat.format(calendar.time)
 
-            for (i in 0..7) {
-                val dateStr = dateFormat.format(calendar.time)
-                val response = api.getDailyRates(dateStr)
+            val response = api.getMetalRates(dateFrom, dateTo)
 
-                if (response.isSuccessful) {
-                    val valCurs = response.body()
-                    val gold = valCurs?.valutes?.find { it.charCode == "XAU" }
+            if (response.isSuccessful) {
+                val metall = response.body()
+                val goldRecords = metall?.records?.filter { it.code == "1" }
 
-                    if (gold != null && gold.value != null) {
-                        val valueStr = gold.value!!.replace(",", ".")
-                        val ratePerTroyOunce = valueStr.toDoubleOrNull() ?: return@withContext null
-                        val nominal = gold.nominal ?: 1
-                        val ratePerGram = (ratePerTroyOunce * nominal) / 31.1034768
+                if (!goldRecords.isNullOrEmpty()) {
+                    val lastRecord = goldRecords.last()
+                    val buyStr = lastRecord.buy?.replace(",", ".") ?: return@withContext null
+                    val ratePerGram = buyStr.toDoubleOrNull() ?: return@withContext null
 
-                        return@withContext GoldRate(ratePerGram, dateStr)
-                    }
+                    return@withContext GoldRate(ratePerGram, lastRecord.date ?: dateTo)
                 }
-
-                calendar.add(Calendar.DAY_OF_YEAR, -1)
             }
         } catch (e: Exception) {
             e.printStackTrace()

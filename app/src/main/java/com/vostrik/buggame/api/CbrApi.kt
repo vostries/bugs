@@ -5,8 +5,9 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface CbrApi {
-    @GET("scripts/XML_daily.asp")
-    suspend fun getDailyRates(
-        @Query("date_req") date: String? = null
-    ): Response<ValCurs>
+    @GET("scripts/xml_metall.asp")
+    suspend fun getMetalRates(
+        @Query("date_req1") dateFrom: String,
+        @Query("date_req2") dateTo: String
+    ): Response<Metall>
 }
