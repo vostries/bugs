@@ -1,6 +1,10 @@
 package com.vostrik.buggame
 
 import android.os.CountDownTimer
+import com.vostrik.buggame.api.GoldRateRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 class GameManager(
@@ -16,6 +20,8 @@ class GameManager(
 ) {
     private val bugs = mutableListOf<Bug>()
     private var bonus: Bonus? = null
+    private var goldenBug: Bug? = null
+    private var goldRate: Double? = null
     private var isGravityMode = false
     private var gravityEndTime = 0L
     private val gravityDuration = 15000L
@@ -27,6 +33,7 @@ class GameManager(
     private var isRunning = false
     private var timer: CountDownTimer? = null
     private var bonusTimer: CountDownTimer? = null
+    private var goldenBugTimer: CountDownTimer? = null
     private var lastUpdateTime = System.currentTimeMillis()
 
     init {
@@ -48,18 +55,22 @@ class GameManager(
         misses = 0
         bugs.clear()
         bonus = null
+        goldenBug = null
         lastUpdateTime = System.currentTimeMillis()
 
+        loadGoldRate()
         spawnInitialBugs()
         startGameLoop()
         startTimer()
         startBonusTimer()
+        startGoldenBugTimer()
     }
 
     fun stop() {
         isRunning = false
         timer?.cancel()
         bonusTimer?.cancel()
+        goldenBugTimer?.cancel()
     }
 
     private fun spawnInitialBugs() {
@@ -169,9 +180,22 @@ class GameManager(
     }
 
     private fun handleBugHit(bug: Bug) {
-        score += bug.points
+        val points = if (bug.type == BugType.GOLDEN) {
+            val rate = goldRate ?: 8000.0
+            (rate / 100.0).toInt().coerceAtLeast(50)
+        } else {
+            bug.points
+        }
+
+        score += points
         hits++
-        bugs.remove(bug)
+
+        if (bug == goldenBug) {
+            goldenBug = null
+        } else {
+            bugs.remove(bug)
+        }
+
         onScoreUpdate(score)
     }
 
@@ -202,6 +226,50 @@ class GameManager(
             0
         }
         onGameEnd(GameResult(score, hits, misses, accuracy))
+    }
+
+    private fun loadGoldRate() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val rate = GoldRateRepository.getInstance().getGoldRate()
+            goldRate = rate?.ratePerGram
+        }
+    }
+
+    private fun startGoldenBugTimer() {
+        goldenBugTimer = object : CountDownTimer(20000, 20000) {
+            override fun onTick(millisUntilFinished: Long) = Unit
+
+            override fun onFinish() {
+                spawnGoldenBug()
+                if (isRunning) {
+                    start()
+                }
+            }
+        }.start()
+    }
+
+    private fun spawnGoldenBug() {
+        if (goldenBug == null) {
+            val screenWidth = gameView.width
+            val screenHeight = gameView.height
+            if (screenWidth > 0 && screenHeight > 0) {
+                val baseSize = 120f
+                val size = baseSize * BugType.GOLDEN.sizeMultiplier
+                val baseSpeed = 100f * gameSpeed
+                val speed = baseSpeed * BugType.GOLDEN.speedMultiplier
+
+                goldenBug = Bug(
+                    x = Random.nextFloat() * (screenWidth - size),
+                    y = Random.nextFloat() * (screenHeight - size),
+                    speedX = (Random.nextFloat() * 2 - 1) * speed,
+                    speedY = (Random.nextFloat() * 2 - 1) * speed,
+                    size = size,
+                    type = BugType.GOLDEN
+                )
+                bugs.add(goldenBug!!)
+                gameView.setBugs(bugs)
+            }
+        }
     }
 }
 

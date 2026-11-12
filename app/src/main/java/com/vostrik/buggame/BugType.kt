@@ -7,5 +7,6 @@ enum class BugType(
 ) {
     NORMAL(1.0f, 1.5f, 10),
     FAST(2.0f, 1.0f, 30),
-    RARE(3.0f, 0.7f, 50)
+    RARE(3.0f, 0.7f, 50),
+    GOLDEN(1.5f, 1.2f, 0)
 }

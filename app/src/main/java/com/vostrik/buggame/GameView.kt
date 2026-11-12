@@ -74,6 +74,7 @@ class GameView @JvmOverloads constructor(
                 BugType.NORMAL -> Color.parseColor("#8B4513")
                 BugType.FAST -> Color.parseColor("#FF4500")
                 BugType.RARE -> Color.parseColor("#FFD700")
+                BugType.GOLDEN -> Color.parseColor("#FFD700")
             }
 
             // ножки слева
@@ -138,6 +139,13 @@ class GameView @JvmOverloads constructor(
             bugPaint.color = Color.BLACK
             canvas.drawCircle(centerX - bug.size * 0.08f, bug.y + bug.size * 0.12f, bug.size * 0.04f, bugPaint)
             canvas.drawCircle(centerX + bug.size * 0.08f, bug.y + bug.size * 0.12f, bug.size * 0.04f, bugPaint)
+
+            if (bug.type == BugType.GOLDEN) {
+                val sparkle = (Math.sin(animationTime * 10.0 + bug.x.toDouble()) * 0.5 + 0.5).toFloat()
+                bugPaint.color = Color.argb((255 * sparkle).toInt(), 255, 255, 255)
+                canvas.drawCircle(bug.x + bug.size * 0.3f, bug.y + bug.size * 0.4f, bug.size * 0.08f, bugPaint)
+                canvas.drawCircle(bug.x + bug.size * 0.7f, bug.y + bug.size * 0.6f, bug.size * 0.06f, bugPaint)
+            }
         }
 
         bonus?.let { b ->
