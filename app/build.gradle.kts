@@ -41,6 +41,10 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.simplexml)
+    implementation(libs.okhttp)
+
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.constraintlayout)
