@@ -16,11 +16,13 @@ data class Bug(
         x += (speedX + gravityX) * deltaTime
         y += (speedY + gravityY) * deltaTime
 
-        if (x <= 0 || x >= screenWidth - size) speedX = -speedX
-        if (y <= 0 || y >= screenHeight - size) speedY = -speedY
+        val maxX = (screenWidth - size).coerceAtLeast(0f)
+        val maxY = (screenHeight - size).coerceAtLeast(0f)
+        if (x <= 0f || x >= maxX) speedX = -speedX
+        if (y <= 0f || y >= maxY) speedY = -speedY
 
-        x = x.coerceIn(0f, (screenWidth - size).toFloat())
-        y = y.coerceIn(0f, (screenHeight - size).toFloat())
+        x = x.coerceIn(0f, maxX)
+        y = y.coerceIn(0f, maxY)
     }
 
     fun contains(touchX: Float, touchY: Float): Boolean {

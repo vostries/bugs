@@ -29,6 +29,7 @@ import android.webkit.WebView
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.tabs.TabLayout
 import com.vostrik.buggame.database.AppDatabase
 import com.vostrik.buggame.database.GameRecord
@@ -57,7 +58,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var textViewResult: TextView
     private lateinit var imageViewZodiac: ImageView
     private val gameViewModel: GameViewModel by viewModel()
-    private var gameTabActive = false
     private lateinit var database: AppDatabase
     private var profiles = mutableListOf<UserProfile>()
     private var selectedProfileId: Long? = null
@@ -86,6 +86,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        selectedProfileId = savedInstanceState?.getLong("PROFILE_ID")?.takeIf { it != 0L }
+
+        lifecycleScope.launch {
+            gameViewModel.gameState.collect { state ->
+                findViewById<TextView>(R.id.textViewScore).text = "Очки: ${state.score}"
+                findViewById<TextView>(R.id.textViewTimer).text =
+                    if (state.timeLeft > 0) state.timeLeft.toString() else ""
+            }
+        }
 
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
         val tabContent = findViewById<SwipeFrameLayout>(R.id.tabContent)
@@ -136,15 +146,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 tabContent.swipeEnabled = tab.position != 4
 
                 if (tab.position == 4) {
-                    gameTabActive = true
                     startGame()
                 } else {
-                    gameTabActive = false
                     gameViewModel.gameManager?.apply {
-                        detachView()
-                        if (isRunning) stop()
+                        if (!isChangingConfigurations) {
+                            detachView()
+                            stop()
+                            gameViewModel.gameManager = null
+                        }
                     }
-                    gameViewModel.gameManager = null
                 }
 
                 if (tab.position == 5) {
@@ -282,9 +292,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             createNewProfile(fullName)
         }
 
-        if (intent.getBooleanExtra("START_GAME_TAB", false)) {
+        if (savedInstanceState != null) {
+            tabLayout.getTabAt(savedInstanceState.getInt("TAB_INDEX", 0))?.select()
+        } else if (intent.getBooleanExtra("START_GAME_TAB", false)) {
             tabLayout.getTabAt(4)?.select()
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putLong("PROFILE_ID", selectedProfileId ?: 0L)
+        outState.putInt("TAB_INDEX", findViewById<TabLayout>(R.id.tabLayout).selectedTabPosition)
     }
 
     override fun onDestroy() {
@@ -376,8 +394,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
 
         val gameView = findViewById<GameView>(R.id.gameView)
-        val textViewScore = findViewById<TextView>(R.id.textViewScore)
-        val textViewTimer = findViewById<TextView>(R.id.textViewTimer)
         val seekBarGameSpeed = findViewById<SeekBar>(R.id.seekBarGameSpeed)
         val seekBarMaxCockroaches = findViewById<SeekBar>(R.id.seekBarMaxCockroaches)
         val seekBarRoundDuration = findViewById<SeekBar>(R.id.seekBarRoundDuration)
@@ -388,39 +404,36 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val bonusInterval = findViewById<SeekBar>(R.id.seekBarBonusInterval).progress + 1
 
         if (gameViewModel.gameManager == null) {
+            gameViewModel.resetState()
             gameViewModel.gameManager = GameManager(
                 roundDuration = roundDuration,
                 maxBugs = maxBugs,
                 gameSpeed = difficulty.toFloat(),
                 bonusInterval = bonusInterval
-            ).also { mgr ->
-                mgr.onScoreUpdate = { score ->
-                    textViewScore.text = "Очки: $score"
-                    gameViewModel.updateScore(score)
-                }
-                mgr.onTimeUpdate = { seconds ->
-                    textViewTimer.text = seconds.toString()
-                    gameViewModel.updateTimeLeft(seconds)
-                }
-                mgr.onGameEnd = { result ->
-                    saveGameResult(result, profileId, difficulty)
-                }
-                mgr.onGravityModeChanged = { isActive ->
-                    gameViewModel.updateIsGravityMode(isActive)
-                    if (isActive) {
-                        bugScreamStreamId = soundPool.play(bugScreamSoundId, 1.0f, 1.0f, 1, -1, 1.0f)
-                    } else {
-                        if (bugScreamStreamId != 0) {
-                            soundPool.stop(bugScreamStreamId)
-                            bugScreamStreamId = 0
-                        }
-                    }
-                }
-            }
+            )
         }
 
         val mgr = gameViewModel.gameManager!!
-        textViewScore.text = "Очки: ${mgr.getScore()}"
+        mgr.onScoreUpdate = { score ->
+            gameViewModel.updateScore(score)
+        }
+        mgr.onTimeUpdate = { seconds ->
+            gameViewModel.updateTimeLeft(seconds)
+        }
+        mgr.onGameEnd = { result ->
+            saveGameResult(result, profileId, difficulty)
+        }
+        mgr.onGravityModeChanged = { isActive ->
+            gameViewModel.updateIsGravityMode(isActive)
+            if (isActive) {
+                bugScreamStreamId = soundPool.play(bugScreamSoundId, 1.0f, 1.0f, 1, -1, 1.0f)
+            } else {
+                if (bugScreamStreamId != 0) {
+                    soundPool.stop(bugScreamStreamId)
+                    bugScreamStreamId = 0
+                }
+            }
+        }
 
         mgr.attachView(gameView)
         if (!mgr.isRunning) {

@@ -52,6 +52,7 @@ class GameManager(
     }
 
     fun detachView() {
+        gameView?.removeCallbacks(gameLoop)
         gameView?.onBugHit = null
         gameView?.onMiss = null
         gameView?.onBonusCollected = null
@@ -118,35 +119,38 @@ class GameManager(
         bugs.add(bug)
     }
 
-    private fun startGameLoop() {
-        gameView?.post(object : Runnable {
-            override fun run() {
-                val view = gameView ?: return
-                if (!isRunning) return
+    private val gameLoop = object : Runnable {
+        override fun run() {
+            val view = gameView ?: return
+            if (!isRunning) return
 
-                val currentTime = System.currentTimeMillis()
-                val deltaTime = (currentTime - lastUpdateTime) / 1000f
-                lastUpdateTime = currentTime
+            val currentTime = System.currentTimeMillis()
+            val deltaTime = (currentTime - lastUpdateTime) / 1000f
+            lastUpdateTime = currentTime
 
-                if (isGravityMode && currentTime >= gravityEndTime) {
-                    isGravityMode = false
-                    onGravityModeChanged(false)
-                }
-
-                val gravityX = if (isGravityMode) currentGravityX * 300f else 0f
-                val gravityY = if (isGravityMode) currentGravityY * 300f else 0f
-                view.updateBugs(deltaTime, gravityX, gravityY)
-
-                val screenWidth = view.width
-                val screenHeight = view.height
-                while (bugs.size < maxBugs) {
-                    spawnBug(screenWidth, screenHeight)
-                }
-                view.setBugs(bugs)
-
-                view.postDelayed(this, 16)
+            if (isGravityMode && currentTime >= gravityEndTime) {
+                isGravityMode = false
+                onGravityModeChanged(false)
             }
-        })
+
+            val gravityX = if (isGravityMode) currentGravityX * 300f else 0f
+            val gravityY = if (isGravityMode) currentGravityY * 300f else 0f
+            view.updateBugs(deltaTime, gravityX, gravityY)
+
+            val screenWidth = view.width
+            val screenHeight = view.height
+            while (bugs.size < maxBugs) {
+                spawnBug(screenWidth, screenHeight)
+            }
+            view.setBugs(bugs)
+
+            view.postDelayed(this, 16)
+        }
+    }
+
+    private fun startGameLoop() {
+        gameView?.removeCallbacks(gameLoop)
+        gameView?.post(gameLoop)
     }
 
     private fun startTimer() {
@@ -163,14 +167,13 @@ class GameManager(
     }
 
     private fun startBonusTimer() {
+        bonusTimer?.cancel()
         bonusTimer = object : CountDownTimer((bonusInterval * 1000).toLong(), (bonusInterval * 1000).toLong()) {
             override fun onTick(millisUntilFinished: Long) = Unit
 
             override fun onFinish() {
                 spawnBonus()
-                if (isRunning) {
-                    start()
-                }
+                if (isRunning) startBonusTimer()
             }
         }.start()
     }
@@ -248,19 +251,16 @@ class GameManager(
     }
 
     private fun startGoldenBugTimer() {
+        goldenBugTimer?.cancel()
         goldenBugTimer = object : CountDownTimer(20000, 20000) {
             override fun onTick(millisUntilFinished: Long) = Unit
 
             override fun onFinish() {
                 spawnGoldenBug()
-                if (isRunning) {
-                    start()
-                }
+                if (isRunning) startGoldenBugTimer()
             }
         }.start()
     }
-
-    fun getScore() = score
 
     private fun spawnGoldenBug() {
         val view = gameView ?: return
