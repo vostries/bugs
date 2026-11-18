@@ -8,16 +8,17 @@ import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 class GameManager(
-    private val gameView: GameView,
     private val roundDuration: Int,
     private val maxBugs: Int,
     private val gameSpeed: Float,
-    private val bonusInterval: Int,
-    private val onScoreUpdate: (Int) -> Unit,
-    private val onTimeUpdate: (Int) -> Unit,
-    private val onGameEnd: (GameResult) -> Unit,
-    private val onGravityModeChanged: (Boolean) -> Unit = {}
+    private val bonusInterval: Int
 ) {
+    private var gameView: GameView? = null
+    var onScoreUpdate: (Int) -> Unit = {}
+    var onTimeUpdate: (Int) -> Unit = {}
+    var onGameEnd: (GameResult) -> Unit = {}
+    var onGravityModeChanged: (Boolean) -> Unit = {}
+
     private val bugs = mutableListOf<Bug>()
     private var bonus: Bonus? = null
     private var goldenBug: Bug? = null
@@ -30,22 +31,31 @@ class GameManager(
     private var score = 0
     private var hits = 0
     private var misses = 0
-    private var isRunning = false
+    var isRunning = false
+        private set
     private var timer: CountDownTimer? = null
     private var bonusTimer: CountDownTimer? = null
     private var goldenBugTimer: CountDownTimer? = null
     private var lastUpdateTime = System.currentTimeMillis()
 
-    init {
-        gameView.onBugHit = { bug ->
-            handleBugHit(bug)
+    fun attachView(view: GameView) {
+        gameView = view
+        view.onBugHit = { handleBugHit(it) }
+        view.onMiss = { handleMiss() }
+        view.onBonusCollected = { handleBonusCollected() }
+        view.setBugs(bugs)
+        view.setBonus(bonus)
+        if (isRunning) {
+            lastUpdateTime = System.currentTimeMillis()
+            startGameLoop()
         }
-        gameView.onMiss = {
-            handleMiss()
-        }
-        gameView.onBonusCollected = {
-            handleBonusCollected()
-        }
+    }
+
+    fun detachView() {
+        gameView?.onBugHit = null
+        gameView?.onMiss = null
+        gameView?.onBonusCollected = null
+        gameView = null
     }
 
     fun start() {
@@ -74,14 +84,15 @@ class GameManager(
     }
 
     private fun spawnInitialBugs() {
-        val screenWidth = gameView.width
-        val screenHeight = gameView.height
+        val view = gameView ?: return
+        val screenWidth = view.width
+        val screenHeight = view.height
         if (screenWidth == 0 || screenHeight == 0) return
 
         repeat(maxBugs.coerceAtMost(5)) {
             spawnBug(screenWidth, screenHeight)
         }
-        gameView.setBugs(bugs)
+        view.setBugs(bugs)
     }
 
     private fun spawnBug(screenWidth: Int, screenHeight: Int) {
@@ -108,8 +119,9 @@ class GameManager(
     }
 
     private fun startGameLoop() {
-        gameView.post(object : Runnable {
+        gameView?.post(object : Runnable {
             override fun run() {
+                val view = gameView ?: return
                 if (!isRunning) return
 
                 val currentTime = System.currentTimeMillis()
@@ -123,16 +135,16 @@ class GameManager(
 
                 val gravityX = if (isGravityMode) currentGravityX * 300f else 0f
                 val gravityY = if (isGravityMode) currentGravityY * 300f else 0f
-                gameView.updateBugs(deltaTime, gravityX, gravityY)
+                view.updateBugs(deltaTime, gravityX, gravityY)
 
-                val screenWidth = gameView.width
-                val screenHeight = gameView.height
+                val screenWidth = view.width
+                val screenHeight = view.height
                 while (bugs.size < maxBugs) {
                     spawnBug(screenWidth, screenHeight)
                 }
-                gameView.setBugs(bugs)
+                view.setBugs(bugs)
 
-                gameView.postDelayed(this, 16)
+                view.postDelayed(this, 16)
             }
         })
     }
@@ -164,9 +176,10 @@ class GameManager(
     }
 
     private fun spawnBonus() {
+        val view = gameView ?: return
         if (bonus == null && !isGravityMode) {
-            val screenWidth = gameView.width
-            val screenHeight = gameView.height
+            val screenWidth = view.width
+            val screenHeight = view.height
             if (screenWidth > 0 && screenHeight > 0) {
                 val size = 80f
                 bonus = Bonus(
@@ -174,7 +187,7 @@ class GameManager(
                     y = Random.nextFloat() * (screenHeight - size),
                     size = size
                 )
-                gameView.setBonus(bonus)
+                view.setBonus(bonus)
             }
         }
     }
@@ -192,9 +205,8 @@ class GameManager(
 
         if (bug == goldenBug) {
             goldenBug = null
-        } else {
-            bugs.remove(bug)
         }
+        bugs.remove(bug)
 
         onScoreUpdate(score)
     }
@@ -214,12 +226,12 @@ class GameManager(
         isGravityMode = true
         gravityEndTime = System.currentTimeMillis() + gravityDuration
         bonus = null
-        gameView.setBonus(null)
+        gameView?.setBonus(null)
         onGravityModeChanged(true)
     }
 
     private fun endGame() {
-        isRunning = false
+        stop()
         val accuracy = if (hits + misses > 0) {
             (hits.toFloat() / (hits + misses) * 100).toInt()
         } else {
@@ -248,10 +260,13 @@ class GameManager(
         }.start()
     }
 
+    fun getScore() = score
+
     private fun spawnGoldenBug() {
+        val view = gameView ?: return
         if (goldenBug == null) {
-            val screenWidth = gameView.width
-            val screenHeight = gameView.height
+            val screenWidth = view.width
+            val screenHeight = view.height
             if (screenWidth > 0 && screenHeight > 0) {
                 val baseSize = 120f
                 val size = baseSize * BugType.GOLDEN.sizeMultiplier
@@ -267,7 +282,7 @@ class GameManager(
                     type = BugType.GOLDEN
                 )
                 bugs.add(goldenBug!!)
-                gameView.setBugs(bugs)
+                view.setBugs(bugs)
             }
         }
     }

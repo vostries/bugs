@@ -33,6 +33,7 @@ import com.google.android.material.tabs.TabLayout
 import com.vostrik.buggame.database.AppDatabase
 import com.vostrik.buggame.database.GameRecord
 import com.vostrik.buggame.database.UserProfile
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
@@ -55,7 +56,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var buttonShow: Button
     private lateinit var textViewResult: TextView
     private lateinit var imageViewZodiac: ImageView
-    private var gameManager: GameManager? = null
+    private val gameViewModel: GameViewModel by viewModel()
+    private var gameTabActive = false
     private lateinit var database: AppDatabase
     private var profiles = mutableListOf<UserProfile>()
     private var selectedProfileId: Long? = null
@@ -134,10 +136,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 tabContent.swipeEnabled = tab.position != 4
 
                 if (tab.position == 4) {
+                    gameTabActive = true
                     startGame()
                 } else {
-                    gameManager?.stop()
-                    gameManager = null
+                    gameTabActive = false
+                    gameViewModel.gameManager?.apply {
+                        detachView()
+                        if (isRunning) stop()
+                    }
+                    gameViewModel.gameManager = null
                 }
 
                 if (tab.position == 5) {
@@ -281,8 +288,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     override fun onDestroy() {
-        gameManager?.stop()
-        gameManager = null
+        if (isChangingConfigurations) {
+            gameViewModel.gameManager?.detachView()
+        } else {
+            gameViewModel.gameManager?.stop()
+            gameViewModel.gameManager = null
+        }
         profileScope.cancel()
         soundPool.release()
         super.onDestroy()
@@ -308,7 +319,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         if (event?.sensor?.type == Sensor.TYPE_ACCELEROMETER) {
             val x = -event.values[0]
             val y = -event.values[1]
-            gameManager?.updateGravity(x, y)
+            gameViewModel.gameManager?.updateGravity(x, y)
         }
     }
 
@@ -371,42 +382,50 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val seekBarMaxCockroaches = findViewById<SeekBar>(R.id.seekBarMaxCockroaches)
         val seekBarRoundDuration = findViewById<SeekBar>(R.id.seekBarRoundDuration)
 
-        textViewScore.text = "Очки: 0"
-        textViewTimer.text = ""
-        gameView.setBugs(emptyList())
-
         val difficulty = (seekBarGameSpeed.progress + 1).coerceIn(1, 5)
         val maxBugs = seekBarMaxCockroaches.progress + 1
         val roundDuration = seekBarRoundDuration.progress + 30
         val bonusInterval = findViewById<SeekBar>(R.id.seekBarBonusInterval).progress + 1
 
-        gameManager = GameManager(
-            gameView = gameView,
-            roundDuration = roundDuration,
-            maxBugs = maxBugs,
-            gameSpeed = difficulty.toFloat(),
-            bonusInterval = bonusInterval,
-            onScoreUpdate = { score ->
-                textViewScore.text = "Очки: $score"
-            },
-            onTimeUpdate = { seconds ->
-                textViewTimer.text = seconds.toString()
-            },
-            onGameEnd = { result ->
-                saveGameResult(result, profileId, difficulty)
-            },
-            onGravityModeChanged = { isActive ->
-                if (isActive) {
-                    bugScreamStreamId = soundPool.play(bugScreamSoundId, 1.0f, 1.0f, 1, -1, 1.0f)
-                } else {
-                    if (bugScreamStreamId != 0) {
-                        soundPool.stop(bugScreamStreamId)
-                        bugScreamStreamId = 0
+        if (gameViewModel.gameManager == null) {
+            gameViewModel.gameManager = GameManager(
+                roundDuration = roundDuration,
+                maxBugs = maxBugs,
+                gameSpeed = difficulty.toFloat(),
+                bonusInterval = bonusInterval
+            ).also { mgr ->
+                mgr.onScoreUpdate = { score ->
+                    textViewScore.text = "Очки: $score"
+                    gameViewModel.updateScore(score)
+                }
+                mgr.onTimeUpdate = { seconds ->
+                    textViewTimer.text = seconds.toString()
+                    gameViewModel.updateTimeLeft(seconds)
+                }
+                mgr.onGameEnd = { result ->
+                    saveGameResult(result, profileId, difficulty)
+                }
+                mgr.onGravityModeChanged = { isActive ->
+                    gameViewModel.updateIsGravityMode(isActive)
+                    if (isActive) {
+                        bugScreamStreamId = soundPool.play(bugScreamSoundId, 1.0f, 1.0f, 1, -1, 1.0f)
+                    } else {
+                        if (bugScreamStreamId != 0) {
+                            soundPool.stop(bugScreamStreamId)
+                            bugScreamStreamId = 0
+                        }
                     }
                 }
             }
-        )
-        gameManager?.start()
+        }
+
+        val mgr = gameViewModel.gameManager!!
+        textViewScore.text = "Очки: ${mgr.getScore()}"
+
+        mgr.attachView(gameView)
+        if (!mgr.isRunning) {
+            mgr.start()
+        }
     }
 
     private fun saveGameResult(result: GameResult, profileId: Long, difficulty: Int) {
