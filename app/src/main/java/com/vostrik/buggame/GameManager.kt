@@ -18,6 +18,8 @@ class GameManager(
     var onTimeUpdate: (Int) -> Unit = {}
     var onGameEnd: (GameResult) -> Unit = {}
     var onGravityModeChanged: (Boolean) -> Unit = {}
+    var onBugKilled: (BugType) -> Unit = {}
+    var onBonusCollected: () -> Unit = {}
 
     private val bugs = mutableListOf<Bug>()
     private var bonus: Bonus? = null
@@ -205,6 +207,7 @@ class GameManager(
 
         score += points
         hits++
+        onBugKilled(bug.type)
 
         if (bug == goldenBug) {
             goldenBug = null
@@ -231,6 +234,7 @@ class GameManager(
         bonus = null
         gameView?.setBonus(null)
         onGravityModeChanged(true)
+        onBonusCollected()
     }
 
     private fun endGame() {

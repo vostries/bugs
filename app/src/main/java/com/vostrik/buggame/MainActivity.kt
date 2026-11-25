@@ -31,6 +31,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.tabs.TabLayout
+import com.vostrik.buggame.challenge.ChallengesViewModel
 import com.vostrik.buggame.database.AppDatabase
 import com.vostrik.buggame.database.GameRecord
 import com.vostrik.buggame.database.UserProfile
@@ -58,6 +59,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var textViewResult: TextView
     private lateinit var imageViewZodiac: ImageView
     private val gameViewModel: GameViewModel by viewModel()
+    private val challengesViewModel: ChallengesViewModel by viewModel()
     private lateinit var database: AppDatabase
     private var profiles = mutableListOf<UserProfile>()
     private var selectedProfileId: Long? = null
@@ -421,7 +423,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             gameViewModel.updateTimeLeft(seconds)
         }
         mgr.onGameEnd = { result ->
+            challengesViewModel.onRoundEnd(profileId, result)
             saveGameResult(result, profileId, difficulty)
+        }
+        mgr.onBugKilled = { bugType ->
+            challengesViewModel.onBugKilled(profileId, bugType)
+        }
+        mgr.onBonusCollected = {
+            challengesViewModel.onBonusCollected(profileId)
         }
         mgr.onGravityModeChanged = { isActive ->
             gameViewModel.updateIsGravityMode(isActive)
@@ -494,6 +503,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val profile = profiles[position]
                 selectedProfileId = profile.id.takeIf { it != 0L }
+                challengesViewModel.load(selectedProfileId)
                 if (selectedProfileId == null) {
                     player.fullName = ""
                 } else {
@@ -504,6 +514,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
                 selectedProfileId = null
+                challengesViewModel.load(null)
                 player.fullName = ""
             }
         }
