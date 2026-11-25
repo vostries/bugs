@@ -32,6 +32,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.tabs.TabLayout
 import com.vostrik.buggame.challenge.ChallengesViewModel
+import com.vostrik.buggame.challenge.ChallengesAdapter
+import com.vostrik.buggame.challenge.ChallengeHistoryAdapter
 import com.vostrik.buggame.database.AppDatabase
 import com.vostrik.buggame.database.GameRecord
 import com.vostrik.buggame.database.UserProfile
@@ -106,6 +108,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val tabAuthors = findViewById<View>(R.id.tabAuthors)
         val tabSettings = findViewById<View>(R.id.tabSettings)
         val tabGame = findViewById<View>(R.id.tabGame)
+        val tabChallenges = findViewById<View>(R.id.tabChallenges)
         val tabRecords = findViewById<View>(R.id.tabRecords)
         val spinnerRecordDifficulty = findViewById<Spinner>(R.id.spinnerRecordDifficulty)
         val seekBarGameSpeed = findViewById<SeekBar>(R.id.seekBarGameSpeed)
@@ -135,6 +138,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tabLayout.addTab(tabLayout.newTab().setText(R.string.authors_tab))
         tabLayout.addTab(tabLayout.newTab().setText(R.string.settings_tab))
         tabLayout.addTab(tabLayout.newTab().setText(R.string.game_tab))
+        tabLayout.addTab(tabLayout.newTab().setText(R.string.challenges_tab))
         tabLayout.addTab(tabLayout.newTab().setText(R.string.records_tab))
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
@@ -143,7 +147,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 tabAuthors.visibility = if (tab.position == 2) View.VISIBLE else View.GONE
                 tabSettings.visibility = if (tab.position == 3) View.VISIBLE else View.GONE
                 tabGame.visibility = if (tab.position == 4) View.VISIBLE else View.GONE
-                tabRecords.visibility = if (tab.position == 5) View.VISIBLE else View.GONE
+                tabChallenges.visibility = if (tab.position == 5) View.VISIBLE else View.GONE
+                tabRecords.visibility = if (tab.position == 6) View.VISIBLE else View.GONE
 
                 tabContent.swipeEnabled = tab.position != 4
 
@@ -160,6 +165,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 }
 
                 if (tab.position == 5) {
+                    challengesViewModel.load(selectedProfileId)
+                }
+
+                if (tab.position == 6) {
                     loadRecords(null)
                 }
             }
@@ -184,6 +193,39 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 loadRecords(if (position == 0) null else position)
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
+        val challengesAdapter = ChallengesAdapter()
+        val historyAdapter = ChallengeHistoryAdapter()
+        val recyclerViewChallenges = tabChallenges.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.recyclerViewChallenges)
+        val recyclerViewHistory = tabChallenges.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.recyclerViewHistory)
+        val textViewChallengesNoProfile = tabChallenges.findViewById<TextView>(R.id.textViewChallengesNoProfile)
+        val challengesContent = tabChallenges.findViewById<View>(R.id.challengesContent)
+
+        recyclerViewChallenges.adapter = challengesAdapter
+        recyclerViewChallenges.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
+        recyclerViewHistory.adapter = historyAdapter
+        recyclerViewHistory.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
+
+        lifecycleScope.launch {
+            challengesViewModel.state.collect { state ->
+                if (state.hasProfile) {
+                    challengesContent.visibility = View.VISIBLE
+                    textViewChallengesNoProfile.visibility = View.GONE
+
+                    val dateFormatter = java.text.SimpleDateFormat("dd MMMM yyyy", java.util.Locale("ru"))
+                    val today = dateFormatter.format(java.util.Date())
+                    tabChallenges.findViewById<TextView>(R.id.textViewChallengesDate).text = getString(R.string.challenges_today_title, today)
+                    tabChallenges.findViewById<TextView>(R.id.textViewTodayXp).text = getString(R.string.challenges_today_xp, state.todayXpEarned, state.todayXpMax)
+                    tabChallenges.findViewById<TextView>(R.id.textViewLifetimeXp).text = getString(R.string.challenges_lifetime_xp, state.lifetimeXp)
+
+                    challengesAdapter.submitList(state.active)
+                    historyAdapter.submitList(state.history)
+                } else {
+                    challengesContent.visibility = View.GONE
+                    textViewChallengesNoProfile.visibility = View.VISIBLE
+                }
+            }
         }
 
         seekBarGameSpeed.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {

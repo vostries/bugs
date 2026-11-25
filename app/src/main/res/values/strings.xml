@@ -38,4 +38,14 @@
     <string name="difficulty_option">Сложность %1$d</string>
     <string name="profile_required_for_game">Сначала выберите профиль</string>
     <string name="record_save_failed">Не удалось сохранить рекорд</string>
+    <string name="challenges_tab">Задания</string>
+    <string name="challenges_today_xp">Опыт сегодня: %1$d / %2$d XP</string>
+    <string name="challenges_lifetime_xp">Всего опыта: %1$d XP</string>
+    <string name="challenges_today_title">СЕГОДНЯ: %1$s</string>
+    <string name="challenges_active_header">АКТИВНЫЕ ЗАДАНИЯ</string>
+    <string name="challenges_history_header">ИСТОРИЯ</string>
+    <string name="challenges_completed">выполнено в %1$s</string>
+    <string name="challenges_progress">%1$d / %2$d</string>
+    <string name="challenges_no_profile">Выберите профиль для просмотра заданий</string>
+    <string name="challenges_history_summary">%1$d опыта (%2$d / %3$d выполнено)</string>
 </resources>

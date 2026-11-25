@@ -63,6 +63,15 @@
 
         </FrameLayout>
         <FrameLayout
+            android:id="@+id/tabChallenges"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <include layout="@layout/tab_challenges" />
+
+        </FrameLayout>
+        <FrameLayout
             android:id="@+id/tabRecords"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
